@@ -6,7 +6,7 @@ import openai
 import os
 from dotenv import load_dotenv
 
-costrace.init(api_key="test_key_123")
+costrace.init(api_key="ct_test_iafdpiohweroidsonirewoienodoadioi")
 
 current_file_path = Path(__file__).resolve()
 env_path = current_file_path.parent.parent / ".env"

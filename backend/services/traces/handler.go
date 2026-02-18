@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/ikotun-dev/costrace/models"
 	"github.com/ikotun-dev/costrace/shared"
@@ -22,9 +21,10 @@ func NewTraceHandler(db *gorm.DB) *TraceHandler {
 }
 
 func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
-	apiKey := shared.GetAPIKey(r.Context())
+	// apiKey := shared.GetAPIKey(r.Context())
 
 	var traceData struct {
+		APIKey    string  `json:"api_key"`
 		Provider  string  `json:"provider"`
 		Model     string  `json:"model"`
 		TokensIn  int     `json:"tokens_in"`
@@ -45,7 +45,7 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 
 	// Create trace
 	trace := models.Trace{
-		APIKey:    apiKey,
+		APIKey:    traceData.APIKey,
 		Provider:  traceData.Provider,
 		Model:     traceData.Model,
 		TokensIn:  traceData.TokensIn,
@@ -54,7 +54,7 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 		CostUSD:   traceData.CostUSD,
 		Status:    traceData.Status,
 		Error:     traceData.Error,
-		Timestamp: time.Unix(int64(traceData.Timestamp), 0),
+		// Timestamp: time.Unix(int64(traceData.Timestamp), 0),
 	}
 
 	if err := h.db.Create(&trace).Error; err != nil {

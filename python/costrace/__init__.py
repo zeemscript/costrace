@@ -1,4 +1,4 @@
-from typing import Optional
+from requests import api
 from .pricing import calculate_cost
 from .tracker import configure, create_trace, send_trace
 
@@ -8,31 +8,31 @@ __version__ = "0.1.0"
 __all__ = ["init", "calculate_cost"]
 
 
-def init(api_key: str, endpoint: Optional[str] = None):
+def init(api_key: str, endpoint: str | None = None):
     configure(api_key=api_key, endpoint=endpoint)
     # we try to autopatch if open ai is enabled
     try:
         print("[Costrace] openai detected - enabling autotracking")
-        _patch_openai()
+        _patch_openai(api_key)
 
     except ImportError:
         print("[Costrace] openai not detected - install to enable autotracking")
 
 
-def _patch_openai():
+def _patch_openai(api_key: str):
     import openai
 
     if hasattr(openai, "OpenAI"):
         # OpenAI SDK v1.0+
-        _patch_openai_v1()
+        _patch_openai_v1(api_key)
     elif hasattr(openai, "ChatCompletion"):
         # Legacy OpenAI SDK
-        _patch_openai_legacy()
+        _patch_openai_legacy(api_key)
     else:
         print("[Costrace] Unknown OpenAI SDK version - auto tracking disabled")
 
 
-def _patch_openai_v1():
+def _patch_openai_v1(api_key: str):
     import openai
 
     _original_init = openai.OpenAI.__init__
@@ -43,7 +43,9 @@ def _patch_openai_v1():
         original_create = self.chat.completions.create
 
         def tracked_create(*create_args, **create_kwargs):
-            return _track_completion(original_create, *create_args, **create_kwargs)
+            return _track_completion(
+                original_create, api_key, *create_args, **create_kwargs
+            )
 
         self.chat.completions.create = tracked_create
 
@@ -51,19 +53,19 @@ def _patch_openai_v1():
     print("[Costrace] Patched OpenAI SDK v1.0+")
 
 
-def _patch_openai_legacy():
+def _patch_openai_legacy(api_key: str):
     import openai
 
     _original_create = openai.ChatCompletion.create
 
     def tracked_create(*args, **kwargs):
-        return _track_completion(_original_create, *args, **kwargs)
+        return _track_completion(_original_create, api_key, *args, **kwargs)
 
     openai.ChatCompletion.create = tracked_create
     print("[Costrace] Patched OpenAI SDK legacy")
 
 
-def _track_completion(original_func, *args, **kwargs):
+def _track_completion(original_func, api_key: str, *args, **kwargs):
     import time
 
     start_time = time.time()
@@ -99,6 +101,7 @@ def _track_completion(original_func, *args, **kwargs):
             cost_usd=cost_usd,
             latency_ms=latency_ms,
             status="success",
+            api_key=api_key,
         )
 
         send_trace(trace)
@@ -114,6 +117,7 @@ def _track_completion(original_func, *args, **kwargs):
             tokens_out=0,
             latency_ms=latency_ms,
             cost_usd=0.0,
+            api_key=api_key,
             status="error",
             error=str(e),
         )

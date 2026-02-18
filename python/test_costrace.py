@@ -1,43 +1,52 @@
 # python/test_costrace.py
 
+from pathlib import Path
 import costrace
 import openai
 import os
+from dotenv import load_dotenv
 
-# Initialize Costrace
 costrace.init(api_key="test_key_123")
 
-openai_key = os.getenv("OPENAI_KEY")
-# Create OpenAI client
-client = openai.OpenAI()
+current_file_path = Path(__file__).resolve()
+env_path = current_file_path.parent.parent / ".env"
+
+
+load_dotenv(dotenv_path=env_path)
+
+
+OPENAI_KEY = os.getenv("OPENAI_KEY")
+client = openai.OpenAI(api_key=OPENAI_KEY)
 
 print("Making a real OpenAI call...")
 print("This will be tracked by Costrace!\n")
 
 try:
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "user",
-                "content": 'Say "Hello from Costrace!" and a 400 words story.',
-            }
-        ],
-    )
+    models = ["gpt-5-mini", "gpt-4.1-mini"]
+    for model in models:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": 'Say "Hello from Costrace!" and a 300 words story.',
+                }
+            ],
+        )
 
-    print(f"OpenAI Response: {response.choices[0].message.content}")
-    print("\nUsage:")
-    print(f"  Input tokens:  {response.usage.prompt_tokens}")
-    print(f"  Output tokens: {response.usage.completion_tokens}")
-    print(f"  Total tokens:  {response.usage.total_tokens}")
+        print(f"OpenAI Response: {response.choices[0].message.content}")
+        print("\nUsage:")
+        print(f"  Input tokens:  {response.usage.prompt_tokens}")
+        print(f"  Output tokens: {response.usage.completion_tokens}")
+        print(f"  Total tokens:  {response.usage.total_tokens}")
 
-    # cost = costrace.calculate_cost(
-    #     "openai",
-    #     "gpt-4o-mini",
-    #     response.usage.prompt_tokens,
-    #     response.usage.completion_tokens,
-    # )
-    # print(f"\nCostrace tracked: ${cost}")
+        # cost = costrace.calculate_cost(
+        #     "openai",
+        #     model,
+        #     response.usage.prompt_tokens,
+        #     response.usage.completion_tokens,
+        # )
+        # print(f"\nCostrace tracked: ${cost}")
 
 except Exception as e:
     print(f"Error: {e}")

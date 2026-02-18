@@ -12,8 +12,6 @@ def init(api_key: str, endpoint: Optional[str] = None):
     configure(api_key=api_key, endpoint=endpoint)
     # we try to autopatch if open ai is enabled
     try:
-        import openai
-
         print("[Costrace] openai detected - enabling autotracking")
         _patch_openai()
 

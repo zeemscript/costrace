@@ -22,9 +22,6 @@ type Trace struct {
 	// Status
 	Status string `gorm:"not null" json:"status"` // "success" or "error"
 	Error  string `gorm:"type:text" json:"error,omitempty"`
-
-	// Timestamp from client (when the call was made)
-	Timestamp time.Time `gorm:"index;not null" json:"timestamp"`
 }
 
 func (Trace) TableName() string {

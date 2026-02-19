@@ -38,7 +38,6 @@ except Exception as e:
     print(f"Error listing models: {e}\n")
 
 try:
-    # Use models/ prefix if needed
     models = ["models/gemini-2.5-flash", "models/gemini-2.5-pro", "models/gemini-2.0-pro"]
     for model in models:
         response = client.models.generate_content(
@@ -54,13 +53,6 @@ try:
         print(f"  Total tokens:  {response.usage_metadata.total_token_count}")
         print("\n" + "="*80 + "\n")
 
-        # cost = costrace.calculate_cost(
-        #     "gemini",
-        #     model,
-        #     response.usage_metadata.prompt_token_count,
-        #     response.usage_metadata.candidates_token_count,
-        # )
-        # print(f"\nCostrace tracked: ${cost}")
 
 except Exception as e:
     print(f"Error: {e}")

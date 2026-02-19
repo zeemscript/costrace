@@ -45,14 +45,6 @@ try:
         print(f"  Output tokens: {response.usage.completion_tokens}")
         print(f"  Total tokens:  {response.usage.total_tokens}")
 
-        # cost = costrace.calculate_cost(
-        #     "openai",
-        #     model,
-        #     response.usage.prompt_tokens,
-        #     response.usage.completion_tokens,
-        # )
-        # print(f"\nCostrace tracked: ${cost}")
-
 except Exception as e:
     print(f"Error: {e}")
     print("\nMake sure you have OPENAI_API_KEY set:")

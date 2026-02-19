@@ -10,14 +10,14 @@ export default function DashboardPage() {
         <h1 className="text-sm font-semibold">Dashboard</h1>
       </header>
 
-      <div className="flex-1 space-y-6 p-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-sm border bg-card p-5">
+      <div className="flex-1 space-y-3 p-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-xs border bg-card p-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">
                 Total Cost
               </p>
-              <div className="rounded-sm bg-emerald-500/10 p-2">
+              <div className="rounded-xs bg-emerald-500/10 p-2">
                 <DollarSign className="size-4 text-emerald-400" />
               </div>
             </div>
@@ -29,7 +29,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-sm border bg-card p-5">
+          <div className="rounded-xs border bg-card p-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">
                 API Calls
@@ -44,7 +44,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-sm  border bg-card p-5">
+          <div className="rounded-xs  border bg-card p-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">
                 Tokens Used
@@ -60,7 +60,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-sm border bg-card p-6">
+        <div className="rounded-xs border bg-card p-6">
           <h2 className="text-base font-semibold">
             Get started with costrace
           </h2>
@@ -98,7 +98,7 @@ export default function DashboardPage() {
                 <pre className="font-mono text-sm text-zinc-300">
                   {`import costrace
 
-costrace.init(api_key="ct_your_api_key")`}
+costrace.init(api_key="")`}
                 </pre>
               </div>
             </div>
@@ -118,7 +118,7 @@ costrace.init(api_key="ct_your_api_key")`}
           </div>
         </div>
 
-        <div className="flex min-h-[280px] items-center justify-center rounded-sm border bg-card">
+        <div className="flex min-h-[280px] items-center justify-center rounded-xs border bg-card">
           <div className="text-center">
             <p className="text-sm font-medium text-muted-foreground">
               Cost overview chart

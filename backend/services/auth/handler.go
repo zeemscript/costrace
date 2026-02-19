@@ -2,10 +2,13 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -101,7 +104,6 @@ func (h *AuthHandler) GitHubCallback(w http.ResponseWriter, r *http.Request) {
 
 	githubUser.Country = resp.Header.Get("country_name")
 
-	// If email is not public, fetch it from emails endpoint
 	if githubUser.Email == "" {
 		emailResp, err := client.Get("https://api.github.com/user/emails")
 		if err == nil {
@@ -133,19 +135,27 @@ func (h *AuthHandler) GitHubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]any{
-		"token": jwtToken,
-		"user": map[string]any{
-			"id":         user.ID,
-			"email":      user.Email,
-			"username":   user.Username,
-			"avatar_url": user.AvatarURL,
-			"country":    user.Country,
-		},
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, "Failed to encode user: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
-	log.Printf("user that just completed auth : %v", response)
-	json.NewEncoder(w).Encode(response)
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+
+	encoded := base64.RawURLEncoding.EncodeToString(userJSON)
+	redirectURL := fmt.Sprintf(
+		"%s/auth/callback?token=%s&user=%s",
+		frontendURL,
+		url.QueryEscape(jwtToken),
+		url.QueryEscape(encoded),
+	)
+
+	log.Printf("redirecting user to frontend: %s", user.Username)
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
 func (h *AuthHandler) findOrCreateUser(githubUser types.GitHubUser) (*models.User, error) {

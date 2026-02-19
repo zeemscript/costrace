@@ -13,66 +13,41 @@ export default function SettingsPage() {
         <h1 className="text-sm font-semibold">Settings</h1>
       </header>
 
-      <div className="flex-1 p-6">
-        <div className="mx-auto max-w-9xl space-y-6">
-          <section className="rounded-xl border bg-card p-6">
-            <h2 className="text-base font-semibold">Profile</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Manage your account information.
-            </p>
-            <div className="mt-6 space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" defaultValue="Collins" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    defaultValue="collins@example.com"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button size="sm">Save changes</Button>
-              </div>
-            </div>
-          </section>
+      <div className="flex-1 p-3">
+        <div className="mx-auto max-w-9xl space-y-3">
 
-          <section className="rounded-xl border bg-card p-6">
+          <section className="rounded-xs border bg-card p-6">
             <h2 className="text-base font-semibold">Notifications</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Configure how you receive alerts.
             </p>
             <div className="mt-6 space-y-3">
-              <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center justify-between rounded-xs border p-4">
                 <div>
                   <p className="text-sm font-medium">Cost alerts</p>
                   <p className="text-xs text-muted-foreground">
                     Get notified when spending exceeds a threshold.
                   </p>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="rounded-xs">
                   Configure
                 </Button>
               </div>
-              <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center justify-between rounded-xs border p-4">
                 <div>
                   <p className="text-sm font-medium">Weekly digest</p>
                   <p className="text-xs text-muted-foreground">
                     Receive a weekly summary of your API usage.
                   </p>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="rounded-xs">
                   Configure
                 </Button>
               </div>
             </div>
           </section>
 
-          <section className="rounded-xl border border-red-500/20 bg-card p-6">
+          <section className="rounded-xs border border-red-500/20 bg-card p-6">
             <h2 className="text-base font-semibold text-red-400">
               Danger zone
             </h2>
@@ -86,7 +61,7 @@ export default function SettingsPage() {
                   Permanently delete your account and all data.
                 </p>
               </div>
-              <Button variant="destructive" size="sm">
+              <Button variant="destructive" size="sm" className="rounded-xs">
                 Delete account
               </Button>
             </div>

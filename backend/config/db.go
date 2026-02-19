@@ -19,7 +19,10 @@ func InitDB(dbUrl string) (*gorm.DB, error) {
 	}
 
 	if err := db.AutoMigrate(&models.Trace{}); err != nil {
-		log.Fatal("Failed to migrate database : ", err)
+		log.Fatal("Failed to migrate trace model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.User{}); err != nil {
+		log.Fatal("Failed to migrate user model into database : ", err)
 	}
 
 	log.Print("Database connected & migration completed successfully")

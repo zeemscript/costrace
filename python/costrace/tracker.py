@@ -1,4 +1,5 @@
 from typing import Dict
+import threading
 import requests
 
 _api_key: str|None = None
@@ -16,31 +17,31 @@ def configure(api_key: str, endpoint: str|None = None):
         _endpoint = endpoint
 
 
+def _do_send(data: Dict, api_key: str, endpoint: str):
+    try:
+        response = requests.post(
+            endpoint,
+            json=data,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            timeout=5,
+        )
+        if response.status_code not in range(200, 300):
+            print(f"[Costrace] Error response: {response.text}")
+    except Exception as e:
+        print(f"[Costrace] Failed to send trace: {e}")
+
+
 def send_trace(data: Dict) -> bool:
-    # this sends the trace to costrace backend
-    # this is non-blocking and would not crash the user's application even if the backend is down
     global _api_key, _endpoint, _enabled
     if not _enabled or not _api_key:
         return False
 
-    try:
-        response = requests.post(
-            _endpoint,
-            json=data,
-            headers={
-                "Authorization": f"Bearer {_api_key}",
-                "Content-Type": "application/json",
-            },
-            timeout=2,
-        )
-
-        print(f"[Costrace] Trace sent to {_endpoint} - Status: {response.status_code}")
-        if response.status_code not in range(200, 300):
-            print(f"[Costrace] Error response: {response.text}")
-        return response.status_code in range(200, 300)
-    except Exception as e:
-        print(f"[Promptcost] Failed to send trace: {e}")
-        return False
+    t = threading.Thread(target=_do_send, args=(data, _api_key, _endpoint), daemon=True)
+    t.start()
+    return True
 
 
 def create_trace(

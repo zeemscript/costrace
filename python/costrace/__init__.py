@@ -1,4 +1,4 @@
-from requests import api
+from typing import Callable
 from .pricing import calculate_cost
 from .tracker import configure, create_trace, send_trace
 
@@ -10,23 +10,31 @@ __all__ = ["init", "calculate_cost"]
 
 def init(api_key: str, endpoint: str | None = None):
     configure(api_key=api_key, endpoint=endpoint)
-    # we try to autopatch if open ai is enabled
-    try:
-        print("[Costrace] openai detected - enabling autotracking")
-        _patch_openai(api_key)
 
+    try:
+        _patch_openai(api_key)
     except ImportError:
         print("[Costrace] openai not detected - install to enable autotracking")
 
+    try:
+        _patch_anthropic(api_key)
+    except ImportError:
+        print("[Costrace] anthropic not detected - install to enable autotracking")
+
+    try:
+        _patch_gemini(api_key)
+    except ImportError:
+        print("[Costrace] google-genai not detected - install to enable autotracking")
+
+
+# ── OpenAI ────────────────────────────────────────────────────────────────────
 
 def _patch_openai(api_key: str):
     import openai
 
     if hasattr(openai, "OpenAI"):
-        # OpenAI SDK v1.0+
         _patch_openai_v1(api_key)
     elif hasattr(openai, "ChatCompletion"):
-        # Legacy OpenAI SDK
         _patch_openai_legacy(api_key)
     else:
         print("[Costrace] Unknown OpenAI SDK version - auto tracking disabled")
@@ -42,7 +50,7 @@ def _patch_openai_v1(api_key: str):
 
         original_create = self.chat.completions.create
 
-        def tracked_create(*create_args, **create_kwargs):
+        def tracked_create(*create_args, **create_kwargs) -> Callable:
             return _track_completion(
                 original_create, api_key, *create_args, **create_kwargs
             )
@@ -69,16 +77,12 @@ def _track_completion(original_func, api_key: str, *args, **kwargs):
     import time
 
     start_time = time.time()
-
     model = kwargs.get("model", "unknown")
 
     try:
         response = original_func(*args, **kwargs)
-
-        # calculate latency
         latency_ms = int((time.time() - start_time) * 1000)
 
-        # Extract token usage
         tokens_in = (
             getattr(response.usage, "prompt_tokens", 0)
             if hasattr(response, "usage")
@@ -90,7 +94,6 @@ def _track_completion(original_func, api_key: str, *args, **kwargs):
             else 0
         )
 
-        # calculate cost
         cost_usd = calculate_cost("openai", model, tokens_in, tokens_out)
 
         trace = create_trace(
@@ -103,13 +106,11 @@ def _track_completion(original_func, api_key: str, *args, **kwargs):
             status="success",
             api_key=api_key,
         )
-
         send_trace(trace)
-
         return response
+
     except Exception as e:
         latency_ms = int((time.time() - start_time) * 1000)
-
         trace = create_trace(
             provider="openai",
             model=model,
@@ -121,7 +122,154 @@ def _track_completion(original_func, api_key: str, *args, **kwargs):
             status="error",
             error=str(e),
         )
-
         send_trace(trace)
+        raise
 
+
+# ── Anthropic ─────────────────────────────────────────────────────────────────
+
+def _patch_anthropic(api_key: str):
+    import anthropic
+
+    _original_init = anthropic.Anthropic.__init__
+
+    def wrapped_init(self, *args, **kwargs):
+        _original_init(self, *args, **kwargs)
+
+        original_create = self.messages.create
+
+        def tracked_create(*create_args, **create_kwargs):
+            return _track_anthropic_completion(
+                original_create, api_key, *create_args, **create_kwargs
+            )
+
+        self.messages.create = tracked_create
+
+    anthropic.Anthropic.__init__ = wrapped_init
+    print("[Costrace] Patched Anthropic SDK")
+
+
+def _track_anthropic_completion(original_func, api_key: str, *args, **kwargs):
+    import time
+
+    start_time = time.time()
+    model = kwargs.get("model", "unknown")
+
+    try:
+        response = original_func(*args, **kwargs)
+        latency_ms = int((time.time() - start_time) * 1000)
+
+        tokens_in = (
+            getattr(response.usage, "input_tokens", 0)
+            if hasattr(response, "usage")
+            else 0
+        )
+        tokens_out = (
+            getattr(response.usage, "output_tokens", 0)
+            if hasattr(response, "usage")
+            else 0
+        )
+
+        cost_usd = calculate_cost("anthropic", model, tokens_in, tokens_out)
+
+        trace = create_trace(
+            provider="anthropic",
+            model=model,
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            cost_usd=cost_usd,
+            latency_ms=latency_ms,
+            status="success",
+            api_key=api_key,
+        )
+        send_trace(trace)
+        return response
+
+    except Exception as e:
+        latency_ms = int((time.time() - start_time) * 1000)
+        trace = create_trace(
+            provider="anthropic",
+            model=model,
+            tokens_in=0,
+            tokens_out=0,
+            cost_usd=0.0,
+            latency_ms=latency_ms,
+            status="error",
+            api_key=api_key,
+            error=str(e),
+        )
+        send_trace(trace)
+        raise
+
+
+# ── Gemini ────────────────────────────────────────────────────────────────────
+
+def _patch_gemini(api_key: str):
+    from google import genai
+
+    _original_init = genai.Client.__init__
+
+    def wrapped_init(self, *args, **kwargs):
+        _original_init(self, *args, **kwargs)
+
+        original_generate = self.models.generate_content
+
+        def tracked_generate(*gen_args, **gen_kwargs):
+            return _track_gemini_completion(
+                original_generate, api_key, *gen_args, **gen_kwargs
+            )
+
+        self.models.generate_content = tracked_generate
+
+    genai.Client.__init__ = wrapped_init
+    print("[Costrace] Patched Gemini SDK")
+
+
+def _track_gemini_completion(original_func, api_key: str, *args, **kwargs):
+    import time
+
+    start_time = time.time()
+
+    model = kwargs.get("model", args[0] if args else "unknown")
+    # normalize "models/gemini-2.0-flash" -> "gemini-2.0-flash"
+    if isinstance(model, str) and model.startswith("models/"):
+        model = model[len("models/"):]
+
+    try:
+        response = original_func(*args, **kwargs)
+        latency_ms = int((time.time() - start_time) * 1000)
+
+        usage = getattr(response, "usage_metadata", None)
+        tokens_in = getattr(usage, "prompt_token_count", 0) if usage else 0
+        tokens_out = getattr(usage, "candidates_token_count", 0) if usage else 0
+
+        cost_usd = calculate_cost("gemini", model, tokens_in, tokens_out)
+
+        trace = create_trace(
+            provider="gemini",
+            model=model,
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            cost_usd=cost_usd,
+            latency_ms=latency_ms,
+            status="success",
+            api_key=api_key,
+        )
+        send_trace(trace)
+        return response
+
+    except Exception as e:
+        latency_ms = int((time.time() - start_time) * 1000)
+        trace = create_trace(
+            provider="gemini",
+            model=model,
+            tokens_in=0,
+            tokens_out=0,
+            cost_usd=0.0,
+            latency_ms=latency_ms,
+            status="error",
+            api_key=api_key,
+            error=str(e),
+        )
+        send_trace(trace)
         raise

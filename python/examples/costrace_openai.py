@@ -1,6 +1,11 @@
-# python/test_costrace.py
+# python/test_openai.py - test the openai integration with costrace
 
 from pathlib import Path
+import sys
+
+# Add parent directory to path so we can import costrace
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import costrace
 import openai
 import os
@@ -9,7 +14,7 @@ from dotenv import load_dotenv
 costrace.init(api_key="ct_test_iafdpiohweroidsonirewoienodoadioi")
 
 current_file_path = Path(__file__).resolve()
-env_path = current_file_path.parent.parent / ".env"
+env_path = current_file_path.parent.parent.parent / ".env"
 
 
 load_dotenv(dotenv_path=env_path)
@@ -29,7 +34,7 @@ try:
             messages=[
                 {
                     "role": "user",
-                    "content": 'Say "Hello from Costrace!" and a 300 words story.',
+                    "content": 'Say "Hello from Costrace!" and a 100 words story.',
                 }
             ],
         )

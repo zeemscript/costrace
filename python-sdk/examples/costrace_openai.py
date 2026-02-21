@@ -11,13 +11,16 @@ import openai
 import os
 from dotenv import load_dotenv
 
-costrace.init(api_key="ct_test_iafdpiohweroidsonirewoienodoadioi")
 
 current_file_path = Path(__file__).resolve()
 env_path = current_file_path.parent.parent.parent / ".env"
 
 
 load_dotenv(dotenv_path=env_path)
+
+costrace.init(api_key=os.getenv("COSTRACE_API_KEY"))
+
+
 
 
 OPENAI_KEY = os.getenv("OPENAI_KEY")
@@ -27,7 +30,7 @@ print("Making a real OpenAI call...")
 print("This will be tracked by Costrace!\n")
 
 try:
-    models = ["gpt-5-mini", "gpt-4.1-mini"]
+    models = ["gpt-5-mini", "gpt-4.1-mini", "gpt-3.5-turbo", "gpt-5", "gpt-5.2"]
     for model in models:
         response = client.chat.completions.create(
             model=model,

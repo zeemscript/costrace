@@ -7,8 +7,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/ikotun-dev/costrace/config"
+	"github.com/ikotun-dev/costrace/services/analytics"
+	apikeys "github.com/ikotun-dev/costrace/services/api_keys"
 	"github.com/ikotun-dev/costrace/services/auth"
+	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
 	"github.com/ikotun-dev/costrace/services/traces"
 	"github.com/ikotun-dev/costrace/shared"
 	"github.com/ikotun-dev/costrace/types"
@@ -52,7 +56,12 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
-	// r.Use(middleware.RealIP)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -61,6 +70,9 @@ func main() {
 	})
 
 	traceHandler := traces.NewTraceHandler(db)
+	apiKeyHandler := apikeys.NewApiKeyHandler(db)
+	analyticsHandler := analytics.NewAnalyticsHandler(db)
+	budgetAlertHandler := budgetalerts.NewBudgetAlertHandler(db)
 	authHandler := auth.NewAuthHandler(db, types.AuthConfig{
 		GitHubClientID:     githubClientID,
 		GitHubClientSecret: githubClientSecret,
@@ -72,10 +84,25 @@ func main() {
 	r.Get("/auth/github", authHandler.GitHubLogin)
 	r.Get("/auth/github/callback", authHandler.GitHubCallback)
 
-	// Protected API routes
 	r.Route("/v1", func(r chi.Router) {
-		r.Use(shared.AuthMiddleware(db, []byte(jwtSecret)))
+		// SDK route — authenticated via API key in the request body, not JWT
 		r.Post("/traces", traceHandler.CreateTrace)
+
+		// Dashboard routes — authenticated via JWT
+		r.Group(func(r chi.Router) {
+			r.Use(shared.AuthMiddleware(db, []byte(jwtSecret)))
+			r.Get("/api-keys", apiKeyHandler.ListAPIKeys)
+			r.Post("/api-keys", apiKeyHandler.CreateAPIKey)
+			r.Delete("/api-keys/{id}", apiKeyHandler.DeleteAPIKey)
+			r.Get("/traces", traceHandler.ListTraces)
+		r.Get("/analytics/summary", analyticsHandler.Summary)
+		r.Get("/analytics/cost-over-time", analyticsHandler.CostOverTime)
+		r.Get("/analytics/cost-by-model", analyticsHandler.CostByModel)
+		r.Get("/budget-alerts", budgetAlertHandler.ListBudgetAlerts)
+		r.Post("/budget-alerts", budgetAlertHandler.CreateBudgetAlert)
+		r.Put("/budget-alerts/{id}", budgetAlertHandler.UpdateBudgetAlert)
+		r.Delete("/budget-alerts/{id}", budgetAlertHandler.DeleteBudgetAlert)
+		})
 	})
 
 	port := os.Getenv("PORT")

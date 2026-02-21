@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   BarChart3,
+  Bell,
   Key,
   LayoutDashboard,
   LogOut,
@@ -31,6 +32,7 @@ const topNav = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Logs", href: "/dashboard/logs", icon: ScrollText },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  { label: "Alerts", href: "/dashboard/alerts", icon: Bell },
 ]
 
 const bottomNav = [

@@ -167,13 +167,11 @@ func (h *AuthHandler) findOrCreateUser(githubUser types.GitHubUser) (*models.Use
 
 	if result.Error == gorm.ErrRecordNotFound {
 		// Create new user
-		apiKey := generateAPIKey()
 		user = models.User{
 			Email:     githubUser.Email,
 			GithubID:  githubID,
 			Username:  githubUser.Login,
 			AvatarURL: githubUser.AvatarURL,
-			APIKey:    apiKey,
 			Country:   githubUser.Country,
 		}
 

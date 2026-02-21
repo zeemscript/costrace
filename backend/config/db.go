@@ -24,6 +24,12 @@ func InitDB(dbUrl string) (*gorm.DB, error) {
 	if err := db.AutoMigrate(&models.User{}); err != nil {
 		log.Fatal("Failed to migrate user model into database : ", err)
 	}
+	if err := db.AutoMigrate(&models.APIKey{}); err != nil {
+		log.Fatal("Failed to migrate api_key model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.BudgetAlert{}); err != nil {
+		log.Fatal("Failed to migrate budget_alert model into database : ", err)
+	}
 
 	log.Print("Database connected & migration completed successfully")
 	return db, nil

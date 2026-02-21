@@ -11,7 +11,7 @@ from google import genai
 import os
 from dotenv import load_dotenv
 
-costrace.init(api_key="ct_test_iafdpiohweroidsonirewoienodoadioi")
+costrace.init(api_key="ct_74f3eaea682f1b43817976e4efbc73f08ff16624f9ba9e9415550393efd36b06")
 
 current_file_path = Path(__file__).resolve()
 env_path = current_file_path.parent.parent.parent / ".env"

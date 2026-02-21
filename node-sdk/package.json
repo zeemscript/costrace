@@ -1,0 +1,49 @@
+{
+    "name": "costrace",
+    "version": "0.1.0",
+    "description": "LLM cost and latency tracking for OpenAI, Anthropic, and Google Gemini",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch"
+    },
+    "peerDependencies": {
+        "openai": ">=4.0.0",
+        "@anthropic-ai/sdk": ">=0.20.0",
+        "@google/genai": ">=0.1.0"
+    },
+    "peerDependenciesMeta": {
+        "openai": {
+            "optional": true
+        },
+        "@anthropic-ai/sdk": {
+            "optional": true
+        },
+        "@google/genai": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "typescript": "^5.7.0",
+        "tsx": "^4.19.0",
+        "dotenv": "^16.4.0",
+        "@types/node": "^22.0.0",
+        "openai": "^5.0.0",
+        "@anthropic-ai/sdk": "^0.52.0",
+        "@google/genai": "^0.14.0"
+    },
+    "keywords": [
+        "llm",
+        "cost-tracking",
+        "observability",
+        "openai",
+        "anthropic",
+        "gemini",
+        "ai"
+    ],
+    "license": "MIT"
+}

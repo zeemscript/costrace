@@ -1,9 +1,8 @@
 package models
 
 type User struct {
-	ID     uint   `gorm:"primary_key" json:"id"`
-	Email  string `gorm:"unique;not null" json:"email"`
-	APIKey string `gorm:"unique;not null" json:"api_key"`
+	ID    uint   `gorm:"primary_key" json:"id"`
+	Email string `gorm:"unique;not null" json:"email"`
 
 	// GitHub OAuth fields
 	GithubID  string `gorm:"unique;index" json:"github_id"`

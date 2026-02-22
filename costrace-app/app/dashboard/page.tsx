@@ -6,12 +6,15 @@ import { toast } from "sonner";
 
 import {
   type AnalyticsSummary,
+  type CostByCountryPoint,
   type CostOverTimePoint,
   getAnalyticsSummary,
+  getCostByCountry,
   getCostOverTime,
 } from "@/api/analytics";
 import { CostOverTimeChart } from "@/components/charts/cost-over-time-chart";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { GeographicWidget } from "@/components/widgets/geographic-widget";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 const SDK_TABS = ["Python", "Node.js"] as const;
@@ -34,6 +37,7 @@ costrace.init("your_api_key");`,
 export default function DashboardPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [chartData, setChartData] = useState<CostOverTimePoint[]>([]);
+  const [geoData, setGeoData] = useState<CostByCountryPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [sdkTab, setSdkTab] = useState<SdkTab>("Python");
   const [copied, setCopied] = useState<string | null>(null);
@@ -50,13 +54,15 @@ export default function DashboardPage() {
     Promise.all([
       getAnalyticsSummary("30d", activeTeamId),
       getCostOverTime("7d", activeTeamId),
+      getCostByCountry("30d", activeTeamId),
     ])
-      .then(([summaryRes, chartRes]) => {
+      .then(([summaryRes, chartRes, geoRes]) => {
         setSummary(summaryRes.data);
         setChartData(chartRes.data);
+        setGeoData(geoRes.data);
       })
       .catch(() => {
-        toast.error("Failed to load dashboard data");
+        toast.error("Failed to load dashboard data", { id: "load-dashboard" });
       })
       .finally(() => setLoading(false));
   }, [activeTeamId]);
@@ -140,85 +146,91 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-xs border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Quick start</h2>
-            <a
-              href="https://docs.costrace.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-sm border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              View docs
-              <ExternalLink className="size-3" />
-            </a>
-          </div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <GeographicWidget data={geoData} loading={loading} />
 
-          <div className="mt-4 flex gap-1 rounded-sm border p-0.5 w-fit">
-            {SDK_TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setSdkTab(tab)}
-                className={`rounded-xs px-3 py-1 text-xs font-medium transition-colors ${
-                  sdkTab === tab
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+          <div className="rounded-xs border bg-card p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Quick start</h2>
+              <a
+                href="https://docs.costrace.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-sm border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <div>
-              <p className="mb-2 text-xs font-medium text-muted-foreground">
-                Install
-              </p>
-              <div className="group relative rounded-sm border bg-black/30 px-4 py-3">
-                <code className="font-mono text-[13px] text-emerald-400">
-                  {installCommands[sdkTab]}
-                </code>
-                <button
-                  onClick={() =>
-                    copyToClipboard(installCommands[sdkTab], "install")
-                  }
-                  className="absolute right-2.5 top-2.5 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
-                >
-                  {copied === "install" ? (
-                    <Check className="size-3.5" />
-                  ) : (
-                    <Copy className="size-3.5" />
-                  )}
-                </button>
-              </div>
+                View docs
+                <ExternalLink className="size-3" />
+              </a>
             </div>
 
-            <div>
-              <p className="mb-2 text-xs font-medium text-muted-foreground">
-                Initialize
-              </p>
-              <div className="group relative rounded-sm border bg-black/30 px-4 py-3">
-                <pre className="font-mono text-[13px] leading-relaxed text-zinc-300">
-                  {initSnippets[sdkTab]}
-                </pre>
+            <div className="mt-4 flex gap-1 rounded-sm border p-0.5 w-fit">
+              {SDK_TABS.map((tab) => (
                 <button
-                  onClick={() => copyToClipboard(initSnippets[sdkTab], "init")}
-                  className="absolute right-2.5 top-2.5 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+                  key={tab}
+                  onClick={() => setSdkTab(tab)}
+                  className={`rounded-xs px-3 py-1 text-xs font-medium transition-colors ${
+                    sdkTab === tab
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  {copied === "init" ? (
-                    <Check className="size-3.5" />
-                  ) : (
-                    <Copy className="size-3.5" />
-                  )}
+                  {tab}
                 </button>
-              </div>
+              ))}
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Traces appear automatically as you call OpenAI, Anthropic, or
-              Gemini.
-            </p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  Install
+                </p>
+                <div className="group relative rounded-sm border bg-black/30 px-4 py-3">
+                  <code className="font-mono text-[13px] text-emerald-400">
+                    {installCommands[sdkTab]}
+                  </code>
+                  <button
+                    onClick={() =>
+                      copyToClipboard(installCommands[sdkTab], "install")
+                    }
+                    className="absolute right-2.5 top-2.5 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+                  >
+                    {copied === "install" ? (
+                      <Check className="size-3.5" />
+                    ) : (
+                      <Copy className="size-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  Initialize
+                </p>
+                <div className="group relative rounded-sm border bg-black/30 px-4 py-3">
+                  <pre className="font-mono text-[13px] leading-relaxed text-zinc-300">
+                    {initSnippets[sdkTab]}
+                  </pre>
+                  <button
+                    onClick={() =>
+                      copyToClipboard(initSnippets[sdkTab], "init")
+                    }
+                    className="absolute right-2.5 top-2.5 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+                  >
+                    {copied === "init" ? (
+                      <Check className="size-3.5" />
+                    ) : (
+                      <Copy className="size-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Traces appear automatically as you call OpenAI, Anthropic, or
+                Gemini.
+              </p>
+            </div>
           </div>
         </div>
 

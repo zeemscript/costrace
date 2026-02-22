@@ -11,7 +11,8 @@ export interface TraceData {
 }
 
 let _apiKey: string | null = null;
-let _endpoint = "http://localhost:8080/v1/traces";
+// let _endpoint = "http://localhost:8080/v1/traces";
+let _endpoint = "https://careless-civilization.outray.app/v1/traces";
 
 export function configure(apiKey: string, endpoint?: string): void {
   _apiKey = apiKey;

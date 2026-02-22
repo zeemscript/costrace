@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getCountryWithFlag } from "@/lib/country-flags";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 const PROVIDERS = ["openai", "anthropic", "gemini"];
@@ -54,11 +55,19 @@ export default function LogsPage() {
   const [page, setPage] = useState(1);
   const { activeTeamId } = useWorkspaceStore();
 
+  // Extract unique countries from traces for filter
+  const uniqueCountries = Array.from(
+    new Set(
+      traces.map((t) => t.country).filter((c): c is string => Boolean(c)),
+    ),
+  ).sort();
+
   // Filter state
   const [apiKey, setApiKey] = useState("all");
   const [provider, setProvider] = useState("all");
   const [status, setStatus] = useState("all");
   const [timeRange, setTimeRange] = useState("all");
+  const [country, setCountry] = useState("all");
 
   useEffect(() => {
     getApiKeys(activeTeamId)
@@ -69,7 +78,7 @@ export default function LogsPage() {
   // Reset to page 1 when filters or workspace change
   useEffect(() => {
     setPage(1);
-  }, [apiKey, provider, status, timeRange, activeTeamId]);
+  }, [apiKey, provider, status, timeRange, country, activeTeamId]);
 
   const fetchTraces = useCallback(async () => {
     setLoading(true);
@@ -79,6 +88,7 @@ export default function LogsPage() {
       if (apiKey !== "all") params.api_key = apiKey;
       if (provider !== "all") params.provider = provider;
       if (status !== "all") params.status = status;
+      if (country !== "all") params.country = country;
       const from = timeRangeToUnix(timeRange);
       if (from) params.from = from;
 
@@ -86,11 +96,11 @@ export default function LogsPage() {
       setTraces(data.data);
       setTotal(data.total);
     } catch {
-      toast.error("Failed to fetch traces");
+      toast.error("Failed to fetch traces", { id: "fetch-traces" });
     } finally {
       setLoading(false);
     }
-  }, [apiKey, provider, status, timeRange, page, activeTeamId]);
+  }, [apiKey, provider, status, timeRange, country, page, activeTeamId]);
 
   useEffect(() => {
     fetchTraces();
@@ -162,6 +172,20 @@ export default function LogsPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            <Select value={country} onValueChange={setCountry}>
+              <SelectTrigger className="w-[140px] rounded-xs">
+                <SelectValue placeholder="All countries" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All countries</SelectItem>
+                {uniqueCountries.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Table or empty state */}
@@ -184,6 +208,7 @@ export default function LogsPage() {
                       <TableHead>Provider</TableHead>
                       <TableHead>Model</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Country</TableHead>
                       <TableHead className="text-right">
                         Tokens (in/out)
                       </TableHead>
@@ -196,7 +221,7 @@ export default function LogsPage() {
                     {loading
                       ? Array.from({ length: 8 }).map((_, i) => (
                           <TableRow key={i}>
-                            {Array.from({ length: 7 }).map((_, j) => (
+                            {Array.from({ length: 8 }).map((_, j) => (
                               <TableCell key={j}>
                                 <div className="h-4 w-16 animate-pulse rounded-sm bg-muted" />
                               </TableCell>
@@ -227,6 +252,11 @@ export default function LogsPage() {
                               >
                                 {t.status}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs text-muted-foreground">
+                                {getCountryWithFlag(t.country)}
+                              </span>
                             </TableCell>
                             <TableCell className="text-right font-mono text-xs">
                               {t.tokens_in} / {t.tokens_out}

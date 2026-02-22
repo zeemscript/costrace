@@ -2,12 +2,13 @@
 
 from pathlib import Path
 import sys
+import anthropic
 
 # Add parent directory to path so we can import costrace
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import costrace
-import anthropic
+
 import os
 from dotenv import load_dotenv
 
@@ -34,8 +35,8 @@ try:
     # models = ["claude-3-5-sonnet-20241022", "claude-"]
     models = [
         "claude-haiku-4-5-20251001",
-        # "claude-sonnet-4-5-20250929",
-        # "claude-sonnet-4-20250514",
+        "claude-sonnet-4-5-20250929",
+        "claude-sonnet-4-20250514",
     ]
 
     for model in models:

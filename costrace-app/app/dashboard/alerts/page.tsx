@@ -80,7 +80,7 @@ export default function AlertsPage() {
       setAlerts((prev) => [data, ...prev]);
       resetForm();
       setShowCreate(false);
-      toast.success("Budget alert created");
+      toast.success("Budget alert created", { id: "budget-created" });
     } catch {
       toast.error("Failed to create budget alert");
     } finally {

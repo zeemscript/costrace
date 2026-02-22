@@ -120,6 +120,52 @@ func (h *AnalyticsHandler) CostOverTime(w http.ResponseWriter, r *http.Request) 
 	shared.RespondJSON(w, http.StatusOK, points)
 }
 
+type CostByCountryPoint struct {
+	Country      string  `json:"country"`
+	Cost         float64 `json:"cost"`
+	Calls        int64   `json:"calls"`
+	TokensIn     int64   `json:"tokens_in"`
+	TokensOut    int64   `json:"tokens_out"`
+	AvgLatencyMs float64 `json:"avg_latency_ms"`
+}
+
+// CostByCountry returns aggregated metrics grouped by country
+func (h *AnalyticsHandler) CostByCountry(w http.ResponseWriter, r *http.Request) {
+	user, ok := shared.GetUserFromContext(r.Context())
+	if !ok {
+		shared.RespondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+
+	teamID := getWorkspaceID(r)
+	keys, err := shared.GetScopedKeys(h.db, user, teamID)
+	if err != nil {
+		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch API keys"})
+		return
+	}
+
+	if len(keys) == 0 {
+		shared.RespondJSON(w, http.StatusOK, []CostByCountryPoint{})
+		return
+	}
+
+	period := parsePeriod(r.URL.Query().Get("period"))
+
+	var points []CostByCountryPoint
+	h.db.Model(&models.Trace{}).
+		Where("api_key IN ? AND created_at >= ? AND country IS NOT NULL AND country != ''", keys, period).
+		Select("country, SUM(cost_usd) as cost, COUNT(*) as calls, SUM(tokens_in) as tokens_in, SUM(tokens_out) as tokens_out, AVG(latency_ms) as avg_latency_ms").
+		Group("country").
+		Order("cost DESC").
+		Scan(&points)
+
+	if points == nil {
+		points = []CostByCountryPoint{}
+	}
+
+	shared.RespondJSON(w, http.StatusOK, points)
+}
+
 type CostByModelPoint struct {
 	Model     string  `json:"model"`
 	Provider  string  `json:"provider"`

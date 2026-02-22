@@ -104,6 +104,7 @@ func main() {
 			r.Get("/analytics/summary", analyticsHandler.Summary)
 			r.Get("/analytics/cost-over-time", analyticsHandler.CostOverTime)
 			r.Get("/analytics/cost-by-model", analyticsHandler.CostByModel)
+			r.Get("/analytics/cost-by-country", analyticsHandler.CostByCountry)
 			r.Get("/budget-alerts", budgetAlertHandler.ListBudgetAlerts)
 			r.Post("/budget-alerts", budgetAlertHandler.CreateBudgetAlert)
 			r.Put("/budget-alerts/{id}", budgetAlertHandler.UpdateBudgetAlert)

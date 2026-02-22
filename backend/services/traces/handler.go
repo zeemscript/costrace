@@ -149,6 +149,9 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 	if status := r.URL.Query().Get("status"); status != "" {
 		query = query.Where("status = ?", status)
 	}
+	if country := r.URL.Query().Get("country"); country != "" {
+		query = query.Where("country = ?", country)
+	}
 	if from := r.URL.Query().Get("from"); from != "" {
 		query = query.Where("created_at >= to_timestamp(?::bigint)", from)
 	}

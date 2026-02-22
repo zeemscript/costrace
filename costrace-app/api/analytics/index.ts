@@ -26,6 +26,15 @@ export interface CostByModelPoint {
   tokens_out: number;
 }
 
+export interface CostByCountryPoint {
+  country: string;
+  cost: number;
+  calls: number;
+  tokens_in: number;
+  tokens_out: number;
+  avg_latency_ms: number;
+}
+
 export function getAnalyticsSummary(period?: Period, teamId?: number | null) {
   return api.get<AnalyticsSummary>("/v1/analytics/summary", {
     params: { period, team_id: teamId ?? undefined },
@@ -40,6 +49,12 @@ export function getCostOverTime(period?: Period, teamId?: number | null) {
 
 export function getCostByModel(period?: Period, teamId?: number | null) {
   return api.get<CostByModelPoint[]>("/v1/analytics/cost-by-model", {
+    params: { period, team_id: teamId ?? undefined },
+  });
+}
+
+export function getCostByCountry(period?: Period, teamId?: number | null) {
+  return api.get<CostByCountryPoint[]>("/v1/analytics/cost-by-country", {
     params: { period, team_id: teamId ?? undefined },
   });
 }

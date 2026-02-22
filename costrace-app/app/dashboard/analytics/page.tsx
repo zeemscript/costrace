@@ -6,9 +6,11 @@ import { toast } from "sonner";
 
 import {
   type AnalyticsSummary,
+  type CostByCountryPoint,
   type CostByModelPoint,
   type CostOverTimePoint,
   getAnalyticsSummary,
+  getCostByCountry,
   getCostByModel,
   getCostOverTime,
   type Period,
@@ -16,6 +18,8 @@ import {
 import { CostByModelChart } from "@/components/charts/cost-by-model-chart";
 import { CostOverTimeChart } from "@/components/charts/cost-over-time-chart";
 import { PeriodSelector } from "@/components/charts/period-selector";
+import { WorldMapChart } from "@/components/charts/world-map-chart";
+import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
@@ -25,6 +29,10 @@ export default function AnalyticsPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [costOverTime, setCostOverTime] = useState<CostOverTimePoint[]>([]);
   const [costByModel, setCostByModel] = useState<CostByModelPoint[]>([]);
+  const [costByCountry, setCostByCountry] = useState<CostByCountryPoint[]>([]);
+  const [mapMetric, setMapMetric] = useState<"cost" | "calls" | "latency">(
+    "cost",
+  );
   const { activeTeamId } = useWorkspaceStore();
 
   useEffect(() => {
@@ -33,14 +41,16 @@ export default function AnalyticsPage() {
       getAnalyticsSummary(period, activeTeamId),
       getCostOverTime(period, activeTeamId),
       getCostByModel(period, activeTeamId),
+      getCostByCountry(period, activeTeamId),
     ])
-      .then(([summaryRes, overTimeRes, byModelRes]) => {
+      .then(([summaryRes, overTimeRes, byModelRes, byCountryRes]) => {
         setSummary(summaryRes.data);
         setCostOverTime(overTimeRes.data);
         setCostByModel(byModelRes.data);
+        setCostByCountry(byCountryRes.data);
       })
       .catch(() => {
-        toast.error("Failed to load analytics");
+        toast.error("Failed to load analytics", { id: "load-analytics" });
       })
       .finally(() => setLoading(false));
   }, [period, activeTeamId]);
@@ -94,6 +104,45 @@ export default function AnalyticsPage() {
               <div className="h-[280px] animate-pulse rounded-sm bg-muted" />
             ) : (
               <CostOverTimeChart data={costOverTime} />
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xs border bg-card p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Geographic distribution</h2>
+            <div className="flex items-center gap-1 rounded-xs border bg-muted/50 p-0.5">
+              <Button
+                size="sm"
+                variant={mapMetric === "cost" ? "secondary" : "ghost"}
+                onClick={() => setMapMetric("cost")}
+                className="h-7 rounded-xs px-2 text-xs"
+              >
+                Cost
+              </Button>
+              <Button
+                size="sm"
+                variant={mapMetric === "calls" ? "secondary" : "ghost"}
+                onClick={() => setMapMetric("calls")}
+                className="h-7 rounded-xs px-2 text-xs"
+              >
+                Calls
+              </Button>
+              <Button
+                size="sm"
+                variant={mapMetric === "latency" ? "secondary" : "ghost"}
+                onClick={() => setMapMetric("latency")}
+                className="h-7 rounded-xs px-2 text-xs"
+              >
+                Latency
+              </Button>
+            </div>
+          </div>
+          <div className="mt-4">
+            {loading ? (
+              <div className="h-[400px] animate-pulse rounded-sm bg-muted" />
+            ) : (
+              <WorldMapChart data={costByCountry} metric={mapMetric} />
             )}
           </div>
         </div>

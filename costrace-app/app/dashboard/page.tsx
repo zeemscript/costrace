@@ -1,24 +1,26 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Copy, Check, DollarSign, ExternalLink, Hash, Zap } from "lucide-react"
+import { Check, Copy, DollarSign, ExternalLink, Hash, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { CostOverTimeChart } from "@/components/charts/cost-over-time-chart"
 import {
   type AnalyticsSummary,
   type CostOverTimePoint,
   getAnalyticsSummary,
   getCostOverTime,
-} from "@/api/analytics"
+} from "@/api/analytics";
+import { CostOverTimeChart } from "@/components/charts/cost-over-time-chart";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 
-const SDK_TABS = ["Python", "Node.js"] as const
-type SdkTab = (typeof SDK_TABS)[number]
+const SDK_TABS = ["Python", "Node.js"] as const;
+type SdkTab = (typeof SDK_TABS)[number];
 
 const installCommands: Record<SdkTab, string> = {
   Python: "pip install costrace",
   "Node.js": "npm install costrace",
-}
+};
 
 const initSnippets: Record<SdkTab, string> = {
   Python: `import costrace
@@ -27,29 +29,37 @@ costrace.init(api_key="your_api_key")`,
   "Node.js": `import * as costrace from "costrace";
 
 costrace.init("your_api_key");`,
-}
+};
 
 export default function DashboardPage() {
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [chartData, setChartData] = useState<CostOverTimePoint[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sdkTab, setSdkTab] = useState<SdkTab>("Python")
-  const [copied, setCopied] = useState<string | null>(null)
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [chartData, setChartData] = useState<CostOverTimePoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sdkTab, setSdkTab] = useState<SdkTab>("Python");
+  const [copied, setCopied] = useState<string | null>(null);
+  const { activeTeamId } = useWorkspaceStore();
 
   const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(id)
-    setTimeout(() => setCopied(null), 2000)
-  }
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   useEffect(() => {
-    Promise.all([getAnalyticsSummary("30d"), getCostOverTime("7d")])
+    setLoading(true);
+    Promise.all([
+      getAnalyticsSummary("30d", activeTeamId),
+      getCostOverTime("7d", activeTeamId),
+    ])
       .then(([summaryRes, chartRes]) => {
-        setSummary(summaryRes.data)
-        setChartData(chartRes.data)
+        setSummary(summaryRes.data);
+        setChartData(chartRes.data);
       })
-      .finally(() => setLoading(false))
-  }, [])
+      .catch(() => {
+        toast.error("Failed to load dashboard data");
+      })
+      .finally(() => setLoading(false));
+  }, [activeTeamId]);
 
   return (
     <div className="flex flex-col">
@@ -162,35 +172,52 @@ export default function DashboardPage() {
 
           <div className="mt-4 space-y-3">
             <div>
-              <p className="mb-2 text-xs font-medium text-muted-foreground">Install</p>
+              <p className="mb-2 text-xs font-medium text-muted-foreground">
+                Install
+              </p>
               <div className="group relative rounded-sm border bg-black/30 px-4 py-3">
                 <code className="font-mono text-[13px] text-emerald-400">
                   {installCommands[sdkTab]}
                 </code>
                 <button
-                  onClick={() => copyToClipboard(installCommands[sdkTab], "install")}
+                  onClick={() =>
+                    copyToClipboard(installCommands[sdkTab], "install")
+                  }
                   className="absolute right-2.5 top-2.5 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
                 >
-                  {copied === "install" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  {copied === "install" ? (
+                    <Check className="size-3.5" />
+                  ) : (
+                    <Copy className="size-3.5" />
+                  )}
                 </button>
               </div>
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-medium text-muted-foreground">Initialize</p>
+              <p className="mb-2 text-xs font-medium text-muted-foreground">
+                Initialize
+              </p>
               <div className="group relative rounded-sm border bg-black/30 px-4 py-3">
-                <pre className="font-mono text-[13px] leading-relaxed text-zinc-300">{initSnippets[sdkTab]}</pre>
+                <pre className="font-mono text-[13px] leading-relaxed text-zinc-300">
+                  {initSnippets[sdkTab]}
+                </pre>
                 <button
                   onClick={() => copyToClipboard(initSnippets[sdkTab], "init")}
                   className="absolute right-2.5 top-2.5 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
                 >
-                  {copied === "init" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  {copied === "init" ? (
+                    <Check className="size-3.5" />
+                  ) : (
+                    <Copy className="size-3.5" />
+                  )}
                 </button>
               </div>
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Traces appear automatically as you call OpenAI, Anthropic, or Gemini.
+              Traces appear automatically as you call OpenAI, Anthropic, or
+              Gemini.
             </p>
           </div>
         </div>
@@ -207,5 +234,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

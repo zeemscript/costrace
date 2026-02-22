@@ -1,6 +1,7 @@
+import { UserI } from "@/types/user";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { UserI } from "@/types/user";
+import { useWorkspaceStore } from "./workspace-store";
 
 interface UserState {
   user: UserI | null;
@@ -8,6 +9,7 @@ interface UserState {
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   setAuth: (user: UserI, token: string) => void;
+  updateUser: (user: UserI) => void;
   logout: () => void;
   setHasHydrated: (value: boolean) => void;
 }
@@ -20,7 +22,11 @@ export const useUserStore = create<UserState>()(
       isAuthenticated: false,
       _hasHydrated: false,
       setAuth: (user, token) => set({ user, token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
+      updateUser: (user) => set({ user }),
+      logout: () => {
+        useWorkspaceStore.getState().setActiveWorkspace(null);
+        set({ user: null, token: null, isAuthenticated: false });
+      },
       setHasHydrated: (value) => set({ _hasHydrated: value }),
     }),
     {
@@ -28,6 +34,6 @@ export const useUserStore = create<UserState>()(
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },
-    }
-  )
+    },
+  ),
 );

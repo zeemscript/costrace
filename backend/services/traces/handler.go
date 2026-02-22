@@ -95,9 +95,19 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get all API key strings belonging to this user
-	var keys []string
-	if err := h.db.Model(&models.APIKey{}).Where("user_id = ?", user.ID).Pluck("key", &keys).Error; err != nil {
+	// Get workspace context from query params
+	// If team_id=0 or not provided, use personal workspace
+	var teamID *uint
+	if teamIDStr := r.URL.Query().Get("team_id"); teamIDStr != "" {
+		if tid, err := strconv.ParseUint(teamIDStr, 10, 64); err == nil && tid > 0 {
+			tidUint := uint(tid)
+			teamID = &tidUint
+		}
+	}
+
+	// Get all API key strings visible to this user for the selected workspace
+	keys, err := shared.GetScopedKeys(h.db, user, teamID)
+	if err != nil {
 		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Failed to fetch API keys",
 		})

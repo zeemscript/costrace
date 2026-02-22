@@ -13,6 +13,7 @@ import (
 	apikeys "github.com/ikotun-dev/costrace/services/api_keys"
 	"github.com/ikotun-dev/costrace/services/auth"
 	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
+	"github.com/ikotun-dev/costrace/services/teams"
 	"github.com/ikotun-dev/costrace/services/traces"
 	"github.com/ikotun-dev/costrace/shared"
 	"github.com/ikotun-dev/costrace/types"
@@ -73,6 +74,7 @@ func main() {
 	apiKeyHandler := apikeys.NewApiKeyHandler(db)
 	analyticsHandler := analytics.NewAnalyticsHandler(db)
 	budgetAlertHandler := budgetalerts.NewBudgetAlertHandler(db)
+	teamHandler := teams.NewTeamHandler(db)
 	authHandler := auth.NewAuthHandler(db, types.AuthConfig{
 		GitHubClientID:     githubClientID,
 		GitHubClientSecret: githubClientSecret,
@@ -83,6 +85,8 @@ func main() {
 	// Public routes
 	r.Get("/auth/github", authHandler.GitHubLogin)
 	r.Get("/auth/github/callback", authHandler.GitHubCallback)
+	r.Post("/auth/magic-link", authHandler.RequestMagicLink)
+	r.Get("/auth/magic-link/verify", authHandler.VerifyMagicLink)
 
 	r.Route("/v1", func(r chi.Router) {
 		// SDK route — authenticated via API key in the request body, not JWT
@@ -91,17 +95,33 @@ func main() {
 		// Dashboard routes — authenticated via JWT
 		r.Group(func(r chi.Router) {
 			r.Use(shared.AuthMiddleware(db, []byte(jwtSecret)))
+			r.Get("/user", authHandler.GetCurrentUser)
+			r.Put("/user", authHandler.UpdateUser)
 			r.Get("/api-keys", apiKeyHandler.ListAPIKeys)
 			r.Post("/api-keys", apiKeyHandler.CreateAPIKey)
 			r.Delete("/api-keys/{id}", apiKeyHandler.DeleteAPIKey)
 			r.Get("/traces", traceHandler.ListTraces)
-		r.Get("/analytics/summary", analyticsHandler.Summary)
-		r.Get("/analytics/cost-over-time", analyticsHandler.CostOverTime)
-		r.Get("/analytics/cost-by-model", analyticsHandler.CostByModel)
-		r.Get("/budget-alerts", budgetAlertHandler.ListBudgetAlerts)
-		r.Post("/budget-alerts", budgetAlertHandler.CreateBudgetAlert)
-		r.Put("/budget-alerts/{id}", budgetAlertHandler.UpdateBudgetAlert)
-		r.Delete("/budget-alerts/{id}", budgetAlertHandler.DeleteBudgetAlert)
+			r.Get("/analytics/summary", analyticsHandler.Summary)
+			r.Get("/analytics/cost-over-time", analyticsHandler.CostOverTime)
+			r.Get("/analytics/cost-by-model", analyticsHandler.CostByModel)
+			r.Get("/budget-alerts", budgetAlertHandler.ListBudgetAlerts)
+			r.Post("/budget-alerts", budgetAlertHandler.CreateBudgetAlert)
+			r.Put("/budget-alerts/{id}", budgetAlertHandler.UpdateBudgetAlert)
+			r.Delete("/budget-alerts/{id}", budgetAlertHandler.DeleteBudgetAlert)
+
+			// Team routes
+			r.Post("/teams", teamHandler.CreateTeam)
+			r.Get("/teams/current", teamHandler.GetCurrentTeam)
+			r.Put("/teams", teamHandler.UpdateTeam)
+			r.Delete("/teams", teamHandler.DeleteTeam)
+			r.Post("/teams/invite", teamHandler.InviteMember)
+			r.Get("/teams/invitations", teamHandler.ListInvitations)
+			r.Get("/teams/invitations/mine", teamHandler.MyInvitations)
+			r.Delete("/teams/invitations/{id}", teamHandler.CancelInvitation)
+			r.Post("/teams/invitations/{token}/accept", teamHandler.AcceptInvitation)
+			r.Post("/teams/invitations/{token}/decline", teamHandler.DeclineInvitation)
+			r.Delete("/teams/members/{id}", teamHandler.RemoveMember)
+			r.Post("/teams/leave", teamHandler.LeaveTeam)
 		})
 	})
 

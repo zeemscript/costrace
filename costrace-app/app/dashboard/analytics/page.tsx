@@ -1,43 +1,49 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { DollarSign, Hash, Zap, Clock } from "lucide-react"
+import { Clock, DollarSign, Hash, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { PeriodSelector } from "@/components/charts/period-selector"
-import { CostOverTimeChart } from "@/components/charts/cost-over-time-chart"
-import { CostByModelChart } from "@/components/charts/cost-by-model-chart"
 import {
-  type Period,
   type AnalyticsSummary,
-  type CostOverTimePoint,
   type CostByModelPoint,
+  type CostOverTimePoint,
   getAnalyticsSummary,
-  getCostOverTime,
   getCostByModel,
-} from "@/api/analytics"
+  getCostOverTime,
+  type Period,
+} from "@/api/analytics";
+import { CostByModelChart } from "@/components/charts/cost-by-model-chart";
+import { CostOverTimeChart } from "@/components/charts/cost-over-time-chart";
+import { PeriodSelector } from "@/components/charts/period-selector";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 
 export default function AnalyticsPage() {
-  const [period, setPeriod] = useState<Period>("30d")
-  const [loading, setLoading] = useState(true)
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [costOverTime, setCostOverTime] = useState<CostOverTimePoint[]>([])
-  const [costByModel, setCostByModel] = useState<CostByModelPoint[]>([])
+  const [period, setPeriod] = useState<Period>("30d");
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [costOverTime, setCostOverTime] = useState<CostOverTimePoint[]>([]);
+  const [costByModel, setCostByModel] = useState<CostByModelPoint[]>([]);
+  const { activeTeamId } = useWorkspaceStore();
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     Promise.all([
-      getAnalyticsSummary(period),
-      getCostOverTime(period),
-      getCostByModel(period),
+      getAnalyticsSummary(period, activeTeamId),
+      getCostOverTime(period, activeTeamId),
+      getCostByModel(period, activeTeamId),
     ])
       .then(([summaryRes, overTimeRes, byModelRes]) => {
-        setSummary(summaryRes.data)
-        setCostOverTime(overTimeRes.data)
-        setCostByModel(byModelRes.data)
+        setSummary(summaryRes.data);
+        setCostOverTime(overTimeRes.data);
+        setCostByModel(byModelRes.data);
       })
-      .finally(() => setLoading(false))
-  }, [period])
+      .catch(() => {
+        toast.error("Failed to load analytics");
+      })
+      .finally(() => setLoading(false));
+  }, [period, activeTeamId]);
 
   return (
     <div className="flex flex-col">
@@ -50,7 +56,6 @@ export default function AnalyticsPage() {
       </header>
 
       <div className="flex-1 space-y-3 p-3">
-        {/* Stat cards */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Total Cost"
@@ -75,16 +80,13 @@ export default function AnalyticsPage() {
           />
           <StatCard
             label="Avg Latency"
-            value={
-              summary ? `${Math.round(summary.avg_latency_ms)}ms` : "--"
-            }
+            value={summary ? `${Math.round(summary.avg_latency_ms)}ms` : "--"}
             icon={<Clock className="size-4 text-amber-400" />}
             iconBg="bg-amber-500/10"
             loading={loading}
           />
         </div>
 
-        {/* Cost over time */}
         <div className="rounded-xs border bg-card p-5">
           <h2 className="text-sm font-semibold">Cost over time</h2>
           <div className="mt-4">
@@ -96,7 +98,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Cost by model */}
         <div className="rounded-xs border bg-card p-5">
           <h2 className="text-sm font-semibold">Cost by model</h2>
           <div className="mt-4">
@@ -109,7 +110,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function StatCard({
@@ -119,11 +120,11 @@ function StatCard({
   iconBg,
   loading,
 }: {
-  label: string
-  value: string
-  icon: React.ReactNode
-  iconBg: string
-  loading: boolean
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  loading: boolean;
 }) {
   return (
     <div className="rounded-xs border bg-card p-5">
@@ -137,5 +138,5 @@ function StatCard({
         <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
       )}
     </div>
-  )
+  );
 }

@@ -1,16 +1,20 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { ScrollText, ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, ScrollText } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { getApiKeys, type APIKey } from "@/api/api-keys";
+import { getTraces, type Trace, type TraceFilters } from "@/api/traces";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Table,
   TableBody,
@@ -18,83 +22,83 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { getTraces, type Trace, type TraceFilters } from "@/api/traces"
-import { getApiKeys, type APIKey } from "@/api/api-keys"
+} from "@/components/ui/table";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 
-const PROVIDERS = ["openai", "anthropic", "google"]
-const PER_PAGE = 50
+const PROVIDERS = ["openai", "anthropic", "gemini"];
+const PER_PAGE = 20;
 
 const TIME_RANGES: { label: string; value: string }[] = [
   { label: "All time", value: "all" },
   { label: "Last 24h", value: "24h" },
   { label: "Last 7d", value: "7d" },
   { label: "Last 30d", value: "30d" },
-]
+];
 
 function timeRangeToUnix(value: string): string | undefined {
-  if (value === "all") return undefined
-  const now = Math.floor(Date.now() / 1000)
+  if (value === "all") return undefined;
+  const now = Math.floor(Date.now() / 1000);
   const offsets: Record<string, number> = {
     "24h": 86400,
     "7d": 604800,
     "30d": 2592000,
-  }
-  return String(now - (offsets[value] ?? 0))
+  };
+  return String(now - (offsets[value] ?? 0));
 }
 
 export default function LogsPage() {
-  const [traces, setTraces] = useState<Trace[]>([])
-  const [keys, setKeys] = useState<APIKey[]>([])
-  const [loading, setLoading] = useState(true)
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const [traces, setTraces] = useState<Trace[]>([]);
+  const [keys, setKeys] = useState<APIKey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const { activeTeamId } = useWorkspaceStore();
 
   // Filter state
-  const [apiKey, setApiKey] = useState("all")
-  const [provider, setProvider] = useState("all")
-  const [status, setStatus] = useState("all")
-  const [timeRange, setTimeRange] = useState("all")
+  const [apiKey, setApiKey] = useState("all");
+  const [provider, setProvider] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [timeRange, setTimeRange] = useState("all");
 
   useEffect(() => {
-    getApiKeys()
+    getApiKeys(activeTeamId)
       .then(({ data }) => setKeys(data))
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, [activeTeamId]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or workspace change
   useEffect(() => {
-    setPage(1)
-  }, [apiKey, provider, status, timeRange])
+    setPage(1);
+  }, [apiKey, provider, status, timeRange, activeTeamId]);
 
   const fetchTraces = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const params: TraceFilters = { page, per_page: PER_PAGE }
-      if (apiKey !== "all") params.api_key = apiKey
-      if (provider !== "all") params.provider = provider
-      if (status !== "all") params.status = status
-      const from = timeRangeToUnix(timeRange)
-      if (from) params.from = from
+      const params: TraceFilters = { page, per_page: PER_PAGE };
+      if (activeTeamId) params.team_id = activeTeamId;
+      if (apiKey !== "all") params.api_key = apiKey;
+      if (provider !== "all") params.provider = provider;
+      if (status !== "all") params.status = status;
+      const from = timeRangeToUnix(timeRange);
+      if (from) params.from = from;
 
-      const { data } = await getTraces(params)
-      setTraces(data.data)
-      setTotal(data.total)
-    } catch (err) {
-      console.error("Failed to fetch traces:", err)
+      const { data } = await getTraces(params);
+      setTraces(data.data);
+      setTotal(data.total);
+    } catch {
+      toast.error("Failed to fetch traces");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [apiKey, provider, status, timeRange, page])
+  }, [apiKey, provider, status, timeRange, page, activeTeamId]);
 
   useEffect(() => {
-    fetchTraces()
-  }, [fetchTraces])
+    fetchTraces();
+  }, [fetchTraces]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
-  const from = (page - 1) * PER_PAGE + 1
-  const to = Math.min(page * PER_PAGE, total)
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const from = (page - 1) * PER_PAGE + 1;
+  const to = Math.min(page * PER_PAGE, total);
 
   return (
     <div className="flex flex-col">
@@ -180,7 +184,9 @@ export default function LogsPage() {
                       <TableHead>Provider</TableHead>
                       <TableHead>Model</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Tokens (in/out)</TableHead>
+                      <TableHead className="text-right">
+                        Tokens (in/out)
+                      </TableHead>
                       <TableHead className="text-right">Cost</TableHead>
                       <TableHead className="text-right">Latency</TableHead>
                       <TableHead className="text-right">Time</TableHead>
@@ -200,14 +206,23 @@ export default function LogsPage() {
                       : traces?.map((t) => (
                           <TableRow key={t.id}>
                             <TableCell>
-                              <Badge variant="secondary" className="rounded-xs font-normal">
+                              <Badge
+                                variant="secondary"
+                                className="rounded-xs font-normal"
+                              >
                                 {t.provider}
                               </Badge>
                             </TableCell>
-                            <TableCell className="font-mono text-xs">{t.model}</TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {t.model}
+                            </TableCell>
                             <TableCell>
                               <Badge
-                                variant={t.status === "success" ? "default" : "destructive"}
+                                variant={
+                                  t.status === "success"
+                                    ? "default"
+                                    : "destructive"
+                                }
                                 className="rounded-xs font-normal"
                               >
                                 {t.status}
@@ -249,7 +264,9 @@ export default function LogsPage() {
                       {page} / {totalPages}
                     </span>
                     <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page >= totalPages}
                       className="inline-flex size-8 items-center justify-center rounded-xs border bg-card transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
                     >
@@ -263,5 +280,5 @@ export default function LogsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

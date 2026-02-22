@@ -7,6 +7,7 @@ import (
 
 	"github.com/ikotun-dev/costrace/models"
 	"github.com/ikotun-dev/costrace/services/email"
+	"github.com/ikotun-dev/costrace/shared"
 	"gorm.io/gorm"
 )
 
@@ -25,9 +26,10 @@ func CheckBudgetAlerts(db *gorm.DB, trace *models.Trace) {
 		return
 	}
 
-	// Load all enabled alerts for this user
+	// Load all enabled alerts for the user (personal workspace only)
+	// Note: Budget alerts check against personal workspace only, not team workspaces
 	var alerts []models.BudgetAlert
-	if err := db.Where("user_id = ? AND enabled = ?", apiKey.UserID, true).Find(&alerts).Error; err != nil {
+	if err := db.Where("user_id = ? AND enabled = ?", user.ID, true).Find(&alerts).Error; err != nil {
 		log.Printf("Budget alert check: could not load alerts: %v", err)
 		return
 	}
@@ -36,10 +38,10 @@ func CheckBudgetAlerts(db *gorm.DB, trace *models.Trace) {
 		return
 	}
 
-	// Get all API keys for this user (needed for general/model scope queries)
-	var userKeys []string
-	if err := db.Model(&models.APIKey{}).Where("user_id = ?", apiKey.UserID).Pluck("key", &userKeys).Error; err != nil {
-		log.Printf("Budget alert check: could not load user keys: %v", err)
+	// Get all API keys for the user's personal workspace
+	userKeys, err := shared.GetScopedKeys(db, &user, nil)
+	if err != nil {
+		log.Printf("Budget alert check: could not load scoped keys: %v", err)
 		return
 	}
 

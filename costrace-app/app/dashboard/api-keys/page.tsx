@@ -1,52 +1,63 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Copy, Key, Plus, Trash2 } from "lucide-react"
+import { Copy, Key, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { getApiKeys, createApiKey, deleteApiKey, type APIKey } from "@/api/api-keys"
+import {
+  createApiKey,
+  deleteApiKey,
+  getApiKeys,
+  type APIKey,
+} from "@/api/api-keys";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 
 export default function ApiKeysPage() {
-  const [keys, setKeys] = useState<APIKey[]>([])
-  const [showCreate, setShowCreate] = useState(false)
-  const [keyName, setKeyName] = useState("")
-  const [creating, setCreating] = useState(false)
+  const [keys, setKeys] = useState<APIKey[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [keyName, setKeyName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const { activeTeamId } = useWorkspaceStore();
 
   useEffect(() => {
-    getApiKeys()
+    getApiKeys(activeTeamId)
       .then(({ data }) => setKeys(data))
-      .catch((err) => console.error("Failed to fetch API keys:", err))
-  }, [])
+      .catch(() => toast.error("Failed to fetch API keys"));
+  }, [activeTeamId]);
 
   async function handleCreate() {
-    if (!keyName.trim()) return
-    setCreating(true)
+    if (!keyName.trim()) return;
+    setCreating(true);
     try {
-      const { data } = await createApiKey(keyName.trim())
-      setKeys((prev) => [data, ...prev])
-      setKeyName("")
-      setShowCreate(false)
-    } catch (err) {
-      console.error("Failed to create API key:", err)
+      const { data } = await createApiKey(keyName.trim(), activeTeamId);
+      setKeys((prev) => [data, ...prev]);
+      setKeyName("");
+      setShowCreate(false);
+      toast.success("API key created");
+    } catch {
+      toast.error("Failed to create API key");
     } finally {
-      setCreating(false)
+      setCreating(false);
     }
   }
 
   async function handleDelete(id: number) {
     try {
-      await deleteApiKey(id)
-      setKeys((prev) => prev.filter((k) => k.id !== id))
-    } catch (err) {
-      console.error("Failed to delete API key:", err)
+      await deleteApiKey(id, activeTeamId);
+      setKeys((prev) => prev.filter((k) => k.id !== id));
+      toast.success("API key deleted");
+    } catch {
+      toast.error("Failed to delete API key");
     }
   }
 
   function copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard");
   }
 
   return (
@@ -166,5 +177,5 @@ export default function ApiKeysPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -30,6 +30,18 @@ func InitDB(dbUrl string) (*gorm.DB, error) {
 	if err := db.AutoMigrate(&models.BudgetAlert{}); err != nil {
 		log.Fatal("Failed to migrate budget_alert model into database : ", err)
 	}
+	if err := db.AutoMigrate(&models.Team{}); err != nil {
+		log.Fatal("Failed to migrate team model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.TeamMember{}); err != nil {
+		log.Fatal("Failed to migrate team_member model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.TeamInvitation{}); err != nil {
+		log.Fatal("Failed to migrate team_invitation model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.MagicLinkTokens{}); err != nil {
+		log.Fatal("Failed to migrate magic_link_tokens model into database : ", err)
+	}
 
 	log.Print("Database connected & migration completed successfully")
 	return db, nil

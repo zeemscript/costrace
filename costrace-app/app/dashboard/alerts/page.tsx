@@ -1,114 +1,128 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Bell, Plus, Trash2 } from "lucide-react"
+import { Bell, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { getApiKeys, type APIKey } from "@/api/api-keys";
+import {
+  createBudgetAlert,
+  deleteBudgetAlert,
+  getBudgetAlerts,
+  updateBudgetAlert,
+  type BudgetAlert,
+} from "@/api/budget-alerts";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  getBudgetAlerts,
-  createBudgetAlert,
-  updateBudgetAlert,
-  deleteBudgetAlert,
-  type BudgetAlert,
-} from "@/api/budget-alerts"
-import { getApiKeys, type APIKey } from "@/api/api-keys"
+} from "@/components/ui/select";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<BudgetAlert[]>([])
-  const [apiKeys, setApiKeys] = useState<APIKey[]>([])
-  const [showCreate, setShowCreate] = useState(false)
-  const [creating, setCreating] = useState(false)
+  const [alerts, setAlerts] = useState<BudgetAlert[]>([]);
+  const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const { activeTeamId } = useWorkspaceStore();
 
   // Form state
-  const [name, setName] = useState("")
-  const [scope, setScope] = useState<"general" | "api_key" | "model">("general")
-  const [scopeValue, setScopeValue] = useState("")
-  const [threshold, setThreshold] = useState("")
-  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly")
+  const [name, setName] = useState("");
+  const [scope, setScope] = useState<"general" | "api_key" | "model">(
+    "general",
+  );
+  const [scopeValue, setScopeValue] = useState("");
+  const [threshold, setThreshold] = useState("");
+  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">(
+    "monthly",
+  );
 
   useEffect(() => {
-    getBudgetAlerts()
+    getBudgetAlerts(activeTeamId)
       .then(({ data }) => setAlerts(data))
-      .catch((err) => console.error("Failed to fetch alerts:", err))
-    getApiKeys()
+      .catch(() => toast.error("Failed to fetch budget alerts"));
+    getApiKeys(activeTeamId)
       .then(({ data }) => setApiKeys(data))
-      .catch((err) => console.error("Failed to fetch API keys:", err))
-  }, [])
+      .catch(() => {});
+  }, [activeTeamId]);
 
   function resetForm() {
-    setName("")
-    setScope("general")
-    setScopeValue("")
-    setThreshold("")
-    setPeriod("monthly")
+    setName("");
+    setScope("general");
+    setScopeValue("");
+    setThreshold("");
+    setPeriod("monthly");
   }
 
   async function handleCreate() {
-    const thresholdNum = parseFloat(threshold)
-    if (!name.trim() || isNaN(thresholdNum) || thresholdNum <= 0) return
+    const thresholdNum = parseFloat(threshold);
+    if (!name.trim() || isNaN(thresholdNum) || thresholdNum <= 0) return;
 
-    setCreating(true)
+    setCreating(true);
     try {
-      const { data } = await createBudgetAlert({
-        name: name.trim(),
-        scope,
-        scope_value: scope === "general" ? "" : scopeValue,
-        threshold_usd: thresholdNum,
-        period,
-      })
-      setAlerts((prev) => [data, ...prev])
-      resetForm()
-      setShowCreate(false)
-    } catch (err) {
-      console.error("Failed to create alert:", err)
+      const { data } = await createBudgetAlert(
+        {
+          name: name.trim(),
+          scope,
+          scope_value: scope === "general" ? "" : scopeValue,
+          threshold_usd: thresholdNum,
+          period,
+        },
+        activeTeamId,
+      );
+      setAlerts((prev) => [data, ...prev]);
+      resetForm();
+      setShowCreate(false);
+      toast.success("Budget alert created");
+    } catch {
+      toast.error("Failed to create budget alert");
     } finally {
-      setCreating(false)
+      setCreating(false);
     }
   }
 
   async function handleToggle(alert: BudgetAlert) {
     try {
-      const { data } = await updateBudgetAlert(alert.id, {
-        enabled: !alert.enabled,
-      })
-      setAlerts((prev) => prev.map((a) => (a.id === data.id ? data : a)))
-    } catch (err) {
-      console.error("Failed to toggle alert:", err)
+      const { data } = await updateBudgetAlert(
+        alert.id,
+        { enabled: !alert.enabled },
+        activeTeamId,
+      );
+      setAlerts((prev) => prev.map((a) => (a.id === data.id ? data : a)));
+    } catch {
+      toast.error("Failed to update alert");
     }
   }
 
   async function handleDelete(id: number) {
     try {
-      await deleteBudgetAlert(id)
-      setAlerts((prev) => prev.filter((a) => a.id !== id))
-    } catch (err) {
-      console.error("Failed to delete alert:", err)
+      await deleteBudgetAlert(id, activeTeamId);
+      setAlerts((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Budget alert deleted");
+    } catch {
+      toast.error("Failed to delete alert");
     }
   }
 
   const scopeBadgeVariant = (s: string) => {
     switch (s) {
       case "general":
-        return "default"
+        return "default";
       case "api_key":
-        return "secondary"
+        return "secondary";
       case "model":
-        return "outline"
+        return "outline";
       default:
-        return "default"
+        return "default";
     }
-  }
+  };
 
   return (
     <div className="flex flex-col">
@@ -135,7 +149,9 @@ export default function AlertsPage() {
 
           {showCreate && (
             <div className="mt-6 rounded-xs border bg-card p-5">
-              <h3 className="text-sm font-semibold">Create a new budget alert</h3>
+              <h3 className="text-sm font-semibold">
+                Create a new budget alert
+              </h3>
               <div className="mt-4 space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="alert-name">Alert name</Label>
@@ -154,16 +170,20 @@ export default function AlertsPage() {
                     <Select
                       value={scope}
                       onValueChange={(v) => {
-                        setScope(v as typeof scope)
-                        setScopeValue("")
+                        setScope(v as typeof scope);
+                        setScopeValue("");
                       }}
                     >
                       <SelectTrigger className="w-full rounded-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general">General (all keys)</SelectItem>
-                        <SelectItem value="api_key">Specific API Key</SelectItem>
+                        <SelectItem value="general">
+                          General (all keys)
+                        </SelectItem>
+                        <SelectItem value="api_key">
+                          Specific API Key
+                        </SelectItem>
                         <SelectItem value="model">Specific Model</SelectItem>
                       </SelectContent>
                     </Select>
@@ -218,7 +238,10 @@ export default function AlertsPage() {
 
                   <div className="space-y-2">
                     <Label>Period</Label>
-                    <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
+                    <Select
+                      value={period}
+                      onValueChange={(v) => setPeriod(v as typeof period)}
+                    >
                       <SelectTrigger className="w-full rounded-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -250,8 +273,8 @@ export default function AlertsPage() {
                     className="rounded-xs"
                     variant="ghost"
                     onClick={() => {
-                      setShowCreate(false)
-                      resetForm()
+                      setShowCreate(false);
+                      resetForm();
                     }}
                   >
                     Cancel
@@ -266,10 +289,12 @@ export default function AlertsPage() {
               <div className="flex size-14 items-center justify-center rounded-full bg-muted">
                 <Bell className="size-6 text-muted-foreground" />
               </div>
-              <h3 className="mt-4 text-sm font-semibold">No budget alerts yet</h3>
+              <h3 className="mt-4 text-sm font-semibold">
+                No budget alerts yet
+              </h3>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Create your first budget alert to get notified when your spending
-                exceeds a threshold.
+                Create your first budget alert to get notified when your
+                spending exceeds a threshold.
               </p>
               <Button
                 size="sm"
@@ -289,7 +314,9 @@ export default function AlertsPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-medium">{alert.name}</p>
+                      <p className="truncate text-sm font-medium">
+                        {alert.name}
+                      </p>
                       <Badge variant={scopeBadgeVariant(alert.scope)}>
                         {alert.scope === "api_key"
                           ? "API Key"
@@ -330,5 +357,5 @@ export default function AlertsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

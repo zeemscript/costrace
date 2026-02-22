@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/ikotun-dev/costrace/models"
@@ -17,12 +18,6 @@ func NewAnalyticsHandler(db *gorm.DB) *AnalyticsHandler {
 	return &AnalyticsHandler{db: db}
 }
 
-func getUserKeys(db *gorm.DB, userID uint) ([]string, error) {
-	var keys []string
-	err := db.Model(&models.APIKey{}).Where("user_id = ?", userID).Pluck("key", &keys).Error
-	return keys, err
-}
-
 func parsePeriod(period string) time.Time {
 	switch period {
 	case "7d":
@@ -32,6 +27,16 @@ func parsePeriod(period string) time.Time {
 	default:
 		return time.Now().AddDate(0, 0, -30)
 	}
+}
+
+func getWorkspaceID(r *http.Request) *uint {
+	if teamIDStr := r.URL.Query().Get("team_id"); teamIDStr != "" {
+		if tid, err := strconv.ParseUint(teamIDStr, 10, 64); err == nil && tid > 0 {
+			tidUint := uint(tid)
+			return &tidUint
+		}
+	}
+	return nil
 }
 
 type SummaryResponse struct {
@@ -48,7 +53,8 @@ func (h *AnalyticsHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, err := getUserKeys(h.db, user.ID)
+	teamID := getWorkspaceID(r)
+	keys, err := shared.GetScopedKeys(h.db, user, teamID)
 	if err != nil {
 		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch API keys"})
 		return
@@ -71,11 +77,11 @@ func (h *AnalyticsHandler) Summary(w http.ResponseWriter, r *http.Request) {
 }
 
 type CostOverTimePoint struct {
-	Date     string  `json:"date"`
-	Cost     float64 `json:"cost"`
-	Calls    int64   `json:"calls"`
-	TokensIn int64   `json:"tokens_in"`
-	TokensOut int64  `json:"tokens_out"`
+	Date      string  `json:"date"`
+	Cost      float64 `json:"cost"`
+	Calls     int64   `json:"calls"`
+	TokensIn  int64   `json:"tokens_in"`
+	TokensOut int64   `json:"tokens_out"`
 }
 
 func (h *AnalyticsHandler) CostOverTime(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +91,8 @@ func (h *AnalyticsHandler) CostOverTime(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	keys, err := getUserKeys(h.db, user.ID)
+	teamID := getWorkspaceID(r)
+	keys, err := shared.GetScopedKeys(h.db, user, teamID)
 	if err != nil {
 		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch API keys"})
 		return
@@ -114,12 +121,12 @@ func (h *AnalyticsHandler) CostOverTime(w http.ResponseWriter, r *http.Request) 
 }
 
 type CostByModelPoint struct {
-	Model    string  `json:"model"`
-	Provider string  `json:"provider"`
-	Cost     float64 `json:"cost"`
-	Calls    int64   `json:"calls"`
-	TokensIn int64   `json:"tokens_in"`
-	TokensOut int64  `json:"tokens_out"`
+	Model     string  `json:"model"`
+	Provider  string  `json:"provider"`
+	Cost      float64 `json:"cost"`
+	Calls     int64   `json:"calls"`
+	TokensIn  int64   `json:"tokens_in"`
+	TokensOut int64   `json:"tokens_out"`
 }
 
 func (h *AnalyticsHandler) CostByModel(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +136,8 @@ func (h *AnalyticsHandler) CostByModel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, err := getUserKeys(h.db, user.ID)
+	teamID := getWorkspaceID(r)
+	keys, err := shared.GetScopedKeys(h.db, user, teamID)
 	if err != nil {
 		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch API keys"})
 		return

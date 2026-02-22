@@ -67,3 +67,114 @@ func SendBudgetAlert(to, alertName, currentSpend, threshold, period string) erro
 	log.Printf("Budget alert email sent to %s for alert '%s'", to, alertName)
 	return nil
 }
+
+func SendMagicLink(to, token string) error {
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		log.Println("RESEND_API_KEY not set, skipping email")
+		return nil
+	}
+
+	backendURL := os.Getenv("BACKEND_URL")
+	if backendURL == "" {
+		backendURL = "http://localhost:8080"
+	}
+
+	loginURL := fmt.Sprintf("%s/auth/magic-link/verify?token=%s", backendURL, token)
+
+	html := fmt.Sprintf(`
+<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+  <h2 style="color: #10b981;">Sign in to Costrace</h2>
+  <p>Click the button below to sign in. This link expires in 15 minutes and can only be used once.</p>
+  <a href="%s" style="display: inline-block; margin: 16px 0; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">Sign in to Costrace</a>
+  <p style="color: #888; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
+</div>`, loginURL)
+
+	payload := resendPayload{
+		From:    "Costrace <auth@issueiq.dev>",
+		To:      []string{to},
+		Subject: "Your Costrace login link",
+		HTML:    html,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal email payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("create email request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("send email: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resend API returned status %d", resp.StatusCode)
+	}
+
+	log.Printf("Magic link email sent to %s", to)
+	return nil
+}
+
+func SendTeamInvitation(to, teamName, inviterName, token string) error {
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		log.Println("RESEND_API_KEY not set, skipping email")
+		return nil
+	}
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+
+	acceptURL := fmt.Sprintf("%s/teams/invite/%s", frontendURL, token)
+
+	html := fmt.Sprintf(`
+<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+  <h2 style="color: #10b981;">Costrace Team Invitation</h2>
+  <p><strong>%s</strong> has invited you to join <strong>%s</strong> on Costrace.</p>
+  <p>Join the team to share API keys, traces, analytics, and budget alerts.</p>
+  <a href="%s" style="display: inline-block; margin: 16px 0; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">Accept Invitation</a>
+  <p style="color: #888; font-size: 13px;">This invitation expires in 7 days. If you don't have a Costrace account, you'll be prompted to sign in with GitHub first.</p>
+</div>`, inviterName, teamName, acceptURL)
+
+	payload := resendPayload{
+		From:    "Costrace <team@issueiq.dev>",
+		To:      []string{to},
+		Subject: fmt.Sprintf("%s invited you to join %s on Costrace", inviterName, teamName),
+		HTML:    html,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal email payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("create email request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("send email: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resend API returned status %d", resp.StatusCode)
+	}
+
+	log.Printf("Team invitation email sent to %s for team '%s'", to, teamName)
+	return nil
+}

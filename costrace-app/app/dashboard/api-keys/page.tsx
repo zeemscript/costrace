@@ -16,17 +16,36 @@ import { Label } from "@/components/ui/label";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
+// Skeleton that matches the shape of a single API key card
+function ApiKeySkeleton() {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xs border bg-card p-4">
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="h-4 w-32 animate-pulse rounded-sm bg-muted" />
+        <div className="h-3 w-56 animate-pulse rounded-sm bg-muted" />
+      </div>
+      <div className="flex shrink-0 gap-1">
+        <div className="size-8 animate-pulse rounded-sm bg-muted" />
+        <div className="size-8 animate-pulse rounded-sm bg-muted" />
+      </div>
+    </div>
+  );
+}
+
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<APIKey[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [keyName, setKeyName] = useState("");
   const [creating, setCreating] = useState(false);
   const { activeTeamId } = useWorkspaceStore();
 
   useEffect(() => {
+    setLoading(true);
     getApiKeys(activeTeamId)
       .then(({ data }) => setKeys(data))
-      .catch(() => toast.error("Failed to fetch API keys"));
+      .catch(() => toast.error("Failed to fetch API keys"))
+      .finally(() => setLoading(false));
   }, [activeTeamId]);
 
   async function handleCreate() {
@@ -119,7 +138,13 @@ export default function ApiKeysPage() {
             </div>
           )}
 
-          {keys.length === 0 && !showCreate ? (
+          {loading ? (
+            <div className="mt-6 space-y-2">
+              <ApiKeySkeleton />
+              <ApiKeySkeleton />
+              <ApiKeySkeleton />
+            </div>
+          ) : keys.length === 0 && !showCreate ? (
             <div className="mt-16 flex flex-col items-center justify-center text-center">
               <div className="flex size-14 items-center justify-center rounded-full bg-muted">
                 <Key className="size-6 text-muted-foreground" />

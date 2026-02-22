@@ -1,75 +1,79 @@
-"use client"
+"use client";
 
-import { Bell, Check, Users, X } from "lucide-react"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { Bell, Check, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { acceptInvitation, declineInvitation, getMyInvitations } from "@/api/teams"
-import { getCurrentUser } from "@/api/user"
-import { Button } from "@/components/ui/button"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { useUserStore } from "@/stores/user-store"
-import type { TeamInvitation } from "@/types/team"
+import {
+  acceptInvitation,
+  declineInvitation,
+  getMyInvitations,
+} from "@/api/teams";
+import { getCurrentUser } from "@/api/user";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useUserStore } from "@/stores/user-store";
+import type { TeamInvitation } from "@/types/team";
 
 export default function NotificationsPage() {
-  const [invitations, setInvitations] = useState<TeamInvitation[]>([])
-  const [loading, setLoading] = useState(true)
-  const [processingIds, setProcessingIds] = useState<Set<number>>(new Set())
-  const { updateUser } = useUserStore()
+  const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
+  const { updateUser } = useUserStore();
 
   useEffect(() => {
-    fetchInvitations()
-  }, [])
+    fetchInvitations();
+  }, []);
 
   async function fetchInvitations() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const { data } = await getMyInvitations()
-      setInvitations(data)
+      const { data } = await getMyInvitations();
+      setInvitations(data);
     } catch {
-      toast.error("Failed to load invitations")
+      toast.error("Failed to load invitations");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function handleAccept(invitation: TeamInvitation) {
-    setProcessingIds((prev) => new Set(prev).add(invitation.id))
+    setProcessingIds((prev) => new Set(prev).add(invitation.id));
     try {
-      await acceptInvitation(invitation.token)
-      setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id))
+      await acceptInvitation(invitation.token);
+      setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
       // Refresh user to get updated teams list
-      const { data: freshUser } = await getCurrentUser()
-      updateUser(freshUser)
-      toast.success(`Joined ${invitation.team?.name ?? "team"}`)
+      const { data: freshUser } = await getCurrentUser();
+      updateUser(freshUser);
+      toast.success(`Joined ${invitation.team?.name ?? "team"}`);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Failed to accept invitation"
-      toast.error(msg)
+          ?.error || "Failed to accept invitation";
+      toast.error(msg);
     } finally {
       setProcessingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(invitation.id)
-        return next
-      })
+        const next = new Set(prev);
+        next.delete(invitation.id);
+        return next;
+      });
     }
   }
 
   async function handleDecline(invitation: TeamInvitation) {
-    setProcessingIds((prev) => new Set(prev).add(invitation.id))
+    setProcessingIds((prev) => new Set(prev).add(invitation.id));
     try {
-      await declineInvitation(invitation.token)
-      setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id))
-      toast.success("Invitation declined")
+      await declineInvitation(invitation.token);
+      setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
+      toast.success("Invitation declined");
     } catch {
-      toast.error("Failed to decline invitation")
+      toast.error("Failed to decline invitation");
     } finally {
       setProcessingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(invitation.id)
-        return next
-      })
+        const next = new Set(prev);
+        next.delete(invitation.id);
+        return next;
+      });
     }
   }
 
@@ -91,8 +95,21 @@ export default function NotificationsPage() {
               {Array.from({ length: 3 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-20 animate-pulse rounded-xs border bg-muted"
-                />
+                  className="flex items-center justify-between gap-4 rounded-xs border bg-card p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 animate-pulse rounded-full bg-muted" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-28 animate-pulse rounded-sm bg-muted" />
+                      <div className="h-3 w-44 animate-pulse rounded-sm bg-muted" />
+                      <div className="h-3 w-24 animate-pulse rounded-sm bg-muted" />
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <div className="h-8 w-20 animate-pulse rounded-xs bg-muted" />
+                    <div className="h-8 w-20 animate-pulse rounded-xs bg-muted" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : invitations.length === 0 ? (
@@ -100,9 +117,7 @@ export default function NotificationsPage() {
               <div className="flex size-14 items-center justify-center rounded-full bg-muted">
                 <Bell className="size-6 text-muted-foreground" />
               </div>
-              <h3 className="mt-4 text-sm font-semibold">
-                No notifications
-              </h3>
+              <h3 className="mt-4 text-sm font-semibold">No notifications</h3>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 Team invitations and other notifications will appear here.
               </p>
@@ -110,7 +125,7 @@ export default function NotificationsPage() {
           ) : (
             <div className="mt-6 space-y-2">
               {invitations.map((inv) => {
-                const isProcessing = processingIds.has(inv.id)
+                const isProcessing = processingIds.has(inv.id);
                 return (
                   <div
                     key={inv.id}
@@ -121,9 +136,7 @@ export default function NotificationsPage() {
                         <Users className="size-4 text-emerald-400" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">
-                          Team invitation
-                        </p>
+                        <p className="text-sm font-medium">Team invitation</p>
                         <p className="truncate text-xs text-muted-foreground">
                           You&apos;ve been invited to join{" "}
                           <span className="font-medium text-foreground">
@@ -158,12 +171,12 @@ export default function NotificationsPage() {
                       </Button>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

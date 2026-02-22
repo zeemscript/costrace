@@ -21,8 +21,6 @@ load_dotenv(dotenv_path=env_path)
 costrace.init(api_key=os.getenv("COSTRACE_API_KEY"))
 
 
-
-
 OPENAI_KEY = os.getenv("OPENAI_KEY")
 client = openai.OpenAI(api_key=OPENAI_KEY)
 

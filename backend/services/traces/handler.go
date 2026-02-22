@@ -2,13 +2,18 @@ package traces
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/netip"
 	"strconv"
+	"strings"
 
 	"github.com/ikotun-dev/costrace/models"
 	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
 	"github.com/ikotun-dev/costrace/shared"
+	"github.com/oschwald/geoip2-golang/v2"
 	"gorm.io/gorm"
 )
 
@@ -25,6 +30,7 @@ func NewTraceHandler(db *gorm.DB) *TraceHandler {
 func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 	// apiKey := shared.GetAPIKey(r.Context())
 
+	log.Printf("CREATE TRACE function called")
 	var traceData struct {
 		APIKey    string  `json:"api_key"`
 		Provider  string  `json:"provider"`
@@ -54,6 +60,15 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the real IP address
+	ip := getRealIP(r)
+
+	//https://ipapi.co/{ip}/country/
+	country, err := getCountry(ip)
+	if err != nil {
+		log.Printf("Failed to get country for IP %s: %v", ip, err)
+	}
+
 	// Create trace
 	trace := models.Trace{
 		APIKey:    traceData.APIKey,
@@ -65,6 +80,7 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 		CostUSD:   traceData.CostUSD,
 		Status:    traceData.Status,
 		Error:     traceData.Error,
+		Country:   country,
 		// Timestamp: time.Unix(int64(traceData.Timestamp), 0),
 	}
 
@@ -160,10 +176,68 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusOK, map[string]interface{}{
+	shared.RespondJSON(w, http.StatusOK, map[string]any{
 		"data":     traces,
 		"total":    total,
 		"page":     page,
 		"per_page": perPage,
 	})
+}
+
+func getRealIP(r *http.Request) string {
+	// 1. Check X-Forwarded-For (can be a comma-separated list)
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	if xForwardedFor != "" {
+		ips := strings.Split(xForwardedFor, ",")
+		ip := strings.TrimSpace(ips[0])
+		log.Printf("IP from X-Forwarded-For: %s", ip)
+		return ip
+	}
+
+	xRealIP := r.Header.Get("X-Real-Ip")
+	if xRealIP != "" {
+		log.Printf("IP from X-Real-Ip: %s", xRealIP)
+		return xRealIP
+	}
+
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		// If SplitHostPort fails, the RemoteAddr might not have a port
+		log.Printf("IP from RemoteAddr (no port): %s", r.RemoteAddr)
+		return r.RemoteAddr
+	}
+	log.Printf("IP from RemoteAddr: %s", ip)
+	return ip
+}
+
+func getCountry(ip string) (string, error) {
+	log.Printf("IP address: %s", ip)
+
+	// Handle localhost/loopback addresses
+	if ip == "127.0.0.1" || ip == "::1" || ip == "localhost" {
+		log.Printf("Localhost IP detected, returning 'Local'")
+		return "Local", nil
+	}
+
+	db, err := geoip2.Open("GeoLite2-City.mmdb")
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return "", err
+	}
+	record, err := db.City(addr)
+	if err != nil {
+		return "", err
+	}
+	if !record.HasData() {
+		fmt.Println("No data found for this IP")
+		return "", nil
+	}
+	if record.Location.HasCoordinates() {
+		fmt.Printf("Coordinates: %v, %v\n", *record.Location.Latitude, *record.Location.Longitude)
+	}
+	return record.Country.Names.English, nil
 }

@@ -15,6 +15,7 @@ type Trace struct {
 	TokensIn  int       `gorm:"not null;default:0" json:"tokens_in"`
 	TokensOut int       `gorm:"not null;default:0" json:"tokens_out"`
 	CostUSD   float64   `gorm:"type:decimal(10,6);not null;default:0" json:"cost_usd"`
+	Country   string    `gorm:"index" json:"country"`
 
 	// Performance
 	LatencyMs int `gorm:"not null" json:"latency_ms"`

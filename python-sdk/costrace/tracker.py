@@ -2,12 +2,12 @@ from typing import Dict
 import threading
 import requests
 
-_api_key: str|None = None
-_endpoint: str = "http://localhost:8080/v1/traces"
+_api_key: str | None = None
+_endpoint: str = "https://careless-civilization.outray.app/v1/traces"
 _enabled: bool = True
 
 
-def configure(api_key: str, endpoint: str|None = None):
+def configure(api_key: str, endpoint: str | None = None):
 
     # api_key: Your Costrace API key
     # endpoint: Optional custom backend endpoint
@@ -53,7 +53,7 @@ def create_trace(
     latency_ms: int,
     cost_usd: float,
     status: str = "success",
-    error: str|None = None,
+    error: str | None = None,
 ) -> dict:
 
     trace = {
@@ -70,4 +70,4 @@ def create_trace(
     if error:
         trace["error"] = error
 
-    return trace 
+    return trace

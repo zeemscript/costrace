@@ -6,18 +6,19 @@ import sys
 # Add parent directory to path so we can import costrace
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import costrace
 from google import genai
+import costrace
 import os
 from dotenv import load_dotenv
 
-costrace.init(api_key="ct_74f3eaea682f1b43817976e4efbc73f08ff16624f9ba9e9415550393efd36b06")
 
 current_file_path = Path(__file__).resolve()
 env_path = current_file_path.parent.parent.parent / ".env"
 
 
 load_dotenv(dotenv_path=env_path)
+
+costrace.init(api_key=os.getenv("COSTRACE_API_KEY"))
 
 
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
@@ -38,7 +39,14 @@ except Exception as e:
     print(f"Error listing models: {e}\n")
 
 try:
-    models = ["models/gemini-2.5-flash", "models/gemini-2.5-pro", "models/gemini-2.0-pro"]
+    models = [
+        "models/gemini-2.5-flash",
+        "models/gemini-2.5-pro",
+        "models/gemini-3-pro-preview",
+        "models/gemini-3-flash-preview",
+        "models/gemini-3.1-pro-preview",
+    ]
+
     for model in models:
         response = client.models.generate_content(
             model=model,
@@ -51,7 +59,7 @@ try:
         print(f"  Input tokens:  {response.usage_metadata.prompt_token_count}")
         print(f"  Output tokens: {response.usage_metadata.candidates_token_count}")
         print(f"  Total tokens:  {response.usage_metadata.total_token_count}")
-        print("\n" + "="*80 + "\n")
+        print("\n" + "=" * 80 + "\n")
 
 
 except Exception as e:

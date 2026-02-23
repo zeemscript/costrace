@@ -7,7 +7,7 @@ wheels/
 *.egg-info
 .vscode
 node_modules
-
+.claude
 # Virtual environments
 .venv
 .env

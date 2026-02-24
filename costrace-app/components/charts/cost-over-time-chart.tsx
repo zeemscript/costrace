@@ -1,5 +1,6 @@
-"use client"
+"use client";
 
+import type { CostOverTimePoint } from "@/api/analytics";
 import {
   Area,
   AreaChart,
@@ -8,16 +9,23 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts"
-import type { CostOverTimePoint } from "@/api/analytics"
+} from "recharts";
 
 interface CostOverTimeChartProps {
-  data: CostOverTimePoint[]
+  data: CostOverTimePoint[];
 }
 
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload as CostOverTimePoint
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { payload: CostOverTimePoint }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload as CostOverTimePoint;
   return (
     <div className="rounded-sm border bg-popover/95 px-3 py-2 text-xs shadow-lg backdrop-blur-sm">
       <p className="font-medium text-foreground">{label}</p>
@@ -29,7 +37,7 @@ function CustomTooltip({ active, payload, label }: any) {
         <p>Tokens: {(d.tokens_in + d.tokens_out).toLocaleString()}</p>
       </div>
     </div>
-  )
+  );
 }
 
 export function CostOverTimeChart({ data }: CostOverTimeChartProps) {
@@ -38,7 +46,7 @@ export function CostOverTimeChart({ data }: CostOverTimeChartProps) {
       <div className="flex h-[280px] items-center justify-center">
         <p className="text-sm text-muted-foreground">No data for this period</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -69,8 +77,8 @@ export function CostOverTimeChart({ data }: CostOverTimeChartProps) {
           axisLine={false}
           tick={{ fontSize: 11, fill: "hsl(240 5% 65%)" }}
           tickFormatter={(v) => {
-            const d = new Date(v)
-            return `${d.getMonth() + 1}/${d.getDate()}`
+            const d = new Date(v);
+            return `${d.getMonth() + 1}/${d.getDate()}`;
           }}
         />
         <YAxis
@@ -99,5 +107,5 @@ export function CostOverTimeChart({ data }: CostOverTimeChartProps) {
         />
       </AreaChart>
     </ResponsiveContainer>
-  )
+  );
 }

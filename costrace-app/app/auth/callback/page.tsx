@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/stores/user-store";
 import { UserI } from "@/types/user";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
 
 function CallbackHandler() {
   const router = useRouter();
@@ -15,7 +15,7 @@ function CallbackHandler() {
     const userEncoded = searchParams.get("user");
 
     if (!token || !userEncoded) {
-      router.replace("/");
+      router.replace("/auth");
       return;
     }
 
@@ -26,7 +26,7 @@ function CallbackHandler() {
       setAuth(user, token);
       router.replace("/dashboard");
     } catch {
-      router.replace("/");
+      router.replace("/auth");
     }
   }, [searchParams, setAuth, router]);
 

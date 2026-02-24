@@ -1,5 +1,6 @@
-"use client"
+"use client";
 
+import type { CostByModelPoint } from "@/api/analytics";
 import {
   Bar,
   BarChart,
@@ -8,8 +9,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts"
-import type { CostByModelPoint } from "@/api/analytics"
+} from "recharts";
 
 const COLORS = [
   "hsl(160 84% 39%)",
@@ -17,15 +17,21 @@ const COLORS = [
   "hsl(262 83% 58%)",
   "hsl(47 96% 53%)",
   "hsl(349 89% 60%)",
-]
+];
 
 interface CostByModelChartProps {
-  data: CostByModelPoint[]
+  data: CostByModelPoint[];
 }
 
-function CustomTooltip({ active, payload }: any) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload as CostByModelPoint
+function CustomTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: { payload: CostByModelPoint }[];
+}) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload as CostByModelPoint;
   return (
     <div className="rounded-sm border bg-popover/95 px-3 py-2 text-xs shadow-lg backdrop-blur-sm">
       <p className="font-medium text-foreground">{d.model}</p>
@@ -38,7 +44,7 @@ function CustomTooltip({ active, payload }: any) {
         <p>Tokens: {(d.tokens_in + d.tokens_out).toLocaleString()}</p>
       </div>
     </div>
-  )
+  );
 }
 
 export function CostByModelChart({ data }: CostByModelChartProps) {
@@ -47,20 +53,20 @@ export function CostByModelChart({ data }: CostByModelChartProps) {
       <div className="flex h-[200px] items-center justify-center">
         <p className="text-sm text-muted-foreground">No data for this period</p>
       </div>
-    )
+    );
   }
 
-  const height = Math.max(200, data.length * 48)
+  const height = Math.max(200, data.length * 48);
 
   const colored = data.map((d, i) => ({
     ...d,
     fill: COLORS[i % COLORS.length],
-  }))
+  }));
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
-        data={colored}   
+        data={colored}
         layout="vertical"
         margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
       >
@@ -94,5 +100,5 @@ export function CostByModelChart({ data }: CostByModelChartProps) {
         />
       </BarChart>
     </ResponsiveContainer>
-  )
+  );
 }

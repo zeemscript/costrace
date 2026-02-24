@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   function handleLogout() {
     logout();
-    router.replace("/");
+    router.replace("/auth");
   }
 
   function handleSelectPersonal() {

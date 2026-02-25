@@ -207,6 +207,8 @@ func (h *AuthHandler) findOrCreateUser(githubUser types.GitHubUser) (*models.Use
 	// Try to find existing user by GitHub ID
 	result := h.db.Where("github_id = ?", githubIDStr).First(&user)
 
+	// log.Printf("github id result : ", result)
+
 	if result.Error == gorm.ErrRecordNotFound {
 		// Create new user
 		user = models.User{
@@ -225,7 +227,7 @@ func (h *AuthHandler) findOrCreateUser(githubUser types.GitHubUser) (*models.Use
 		return nil, result.Error
 	} else {
 		// Update existing user info
-		user.Email = githubUser.Email
+		// user.Email = githubUser.Email
 		user.Username = githubUser.Login
 		user.AvatarURL = githubUser.AvatarURL
 		h.db.Save(&user)

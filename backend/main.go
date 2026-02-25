@@ -12,6 +12,7 @@ import (
 	"github.com/ikotun-dev/costrace/services/analytics"
 	apikeys "github.com/ikotun-dev/costrace/services/api_keys"
 	"github.com/ikotun-dev/costrace/services/auth"
+	"github.com/ikotun-dev/costrace/services/billing"
 	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
 	"github.com/ikotun-dev/costrace/services/teams"
 	"github.com/ikotun-dev/costrace/services/traces"
@@ -75,6 +76,7 @@ func main() {
 	analyticsHandler := analytics.NewAnalyticsHandler(db)
 	budgetAlertHandler := budgetalerts.NewBudgetAlertHandler(db)
 	teamHandler := teams.NewTeamHandler(db)
+	billingHandler := billing.NewBillingHandler(db)
 	authHandler := auth.NewAuthHandler(db, types.AuthConfig{
 		GitHubClientID:     githubClientID,
 		GitHubClientSecret: githubClientSecret,
@@ -89,6 +91,9 @@ func main() {
 	r.Get("/auth/magic-link/verify", authHandler.VerifyMagicLink)
 
 	r.Route("/v1", func(r chi.Router) {
+		// Webhook route — called server-to-server from Next.js, no JWT
+		r.Post("/webhooks/polar", billingHandler.HandlePolarWebhook)
+
 		// SDK route — authenticated via API key in the request body, not JWT
 		r.Post("/traces", traceHandler.CreateTrace)
 

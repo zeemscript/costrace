@@ -14,7 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useUserStore } from "@/stores/user-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { Sparkles } from "lucide-react";
+import Link from "next/link";
 
 // Skeleton that matches the shape of a single API key card
 function ApiKeySkeleton() {
@@ -39,6 +42,10 @@ export default function ApiKeysPage() {
   const [keyName, setKeyName] = useState("");
   const [creating, setCreating] = useState(false);
   const { activeTeamId } = useWorkspaceStore();
+  const { user } = useUserStore();
+
+  const isFree = (user?.plan === "free" || !user?.plan) && !activeTeamId;
+  const atFreeLimit = isFree && keys.length >= 1;
 
   useEffect(() => {
     setLoading(true);
@@ -90,6 +97,8 @@ export default function ApiKeysPage() {
           size="sm"
           className="gap-1.5 rounded-xs"
           onClick={() => setShowCreate(!showCreate)}
+          disabled={atFreeLimit}
+          title={atFreeLimit ? "Free plan limit reached (1 key)" : undefined}
         >
           <Plus className="size-3.5" />
           Create key
@@ -101,6 +110,18 @@ export default function ApiKeysPage() {
           <p className="text-sm text-muted-foreground">
             API keys authenticate your SDK with costrace. Keep them secret.
           </p>
+
+          {atFreeLimit && (
+            <div className="mt-4 flex items-center gap-3 rounded-xs border border-amber-500/20 bg-amber-500/5 p-4">
+              <Sparkles className="size-4 shrink-0 text-amber-400" />
+              <p className="flex-1 text-sm text-muted-foreground">
+                Free plan limit reached (1 key). Upgrade for unlimited API keys.
+              </p>
+              <Button size="sm" className="shrink-0 rounded-xs" asChild>
+                <Link href="/dashboard/billing">Upgrade to Pro</Link>
+              </Button>
+            </div>
+          )}
 
           {showCreate && (
             <div className="mt-6 rounded-xs border bg-card p-5">

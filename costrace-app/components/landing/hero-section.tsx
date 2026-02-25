@@ -73,7 +73,7 @@ export function HeroSection() {
         <div className="mt-16 flex items-center gap-4">
           <span className="h-px w-8 bg-white/[0.06]" />
           <code className="font-mono text-[12px] text-white/15">
-            uv add costrace
+            uv add costrace / npm install costrace
           </code>
         </div>
 

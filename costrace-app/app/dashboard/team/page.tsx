@@ -22,6 +22,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useUserStore } from "@/stores/user-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import type { CurrentTeamResponse } from "@/types/team";
+import Link from "next/link";
 
 export default function TeamPage() {
   const [teamData, setTeamData] = useState<CurrentTeamResponse | null>(null);
@@ -190,8 +191,10 @@ export default function TeamPage() {
     );
   }
 
-  // No team selected or personal workspace — show create form
+  // No team selected or personal workspace — show create form or upgrade prompt
   if (!activeTeamId || !teamData) {
+    const isFree = user?.plan === "free" || !user?.plan;
+
     return (
       <div className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/80 px-3 backdrop-blur-sm">
@@ -207,31 +210,48 @@ export default function TeamPage() {
               <h3 className="mt-4 text-sm font-semibold">
                 {activeTeamId ? "Team not found" : "No team selected"}
               </h3>
-              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Create a team to share API keys, traces, analytics, and budget
-                alerts with your teammates. Or select a team from the sidebar.
-              </p>
-              <div className="mt-6 flex w-full max-w-xs flex-col gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="team-name">Team name</Label>
-                  <Input
-                    id="team-name"
-                    className="rounded-xs"
-                    placeholder="e.g. My Company"
-                    value={teamName}
-                    onChange={(e) => setTeamName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleCreateTeam()}
-                  />
-                </div>
-                <Button
-                  size="sm"
-                  className="rounded-xs"
-                  onClick={handleCreateTeam}
-                  disabled={creating || !teamName.trim()}
-                >
-                  {creating ? "Creating..." : "Create Team"}
-                </Button>
-              </div>
+              {isFree ? (
+                <>
+                  <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                    Team creation requires a Pro plan. You can join a team via
+                    invitation.
+                  </p>
+                  <Button size="sm" className="mt-6 rounded-xs" asChild>
+                    <Link href="/dashboard/billing">Upgrade to Pro</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                    Create a team to share API keys, traces, analytics, and
+                    budget alerts with your teammates. Or select a team from the
+                    sidebar.
+                  </p>
+                  <div className="mt-6 flex w-full max-w-xs flex-col gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="team-name">Team name</Label>
+                      <Input
+                        id="team-name"
+                        className="rounded-xs"
+                        placeholder="e.g. My Company"
+                        value={teamName}
+                        onChange={(e) => setTeamName(e.target.value)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleCreateTeam()
+                        }
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      className="rounded-xs"
+                      onClick={handleCreateTeam}
+                      disabled={creating || !teamName.trim()}
+                    >
+                      {creating ? "Creating..." : "Create Team"}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

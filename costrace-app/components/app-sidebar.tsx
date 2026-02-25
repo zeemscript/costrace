@@ -7,6 +7,8 @@ import {
   Building2,
   Check,
   ChevronDown,
+  CreditCard,
+  Crown,
   Key,
   LayoutDashboard,
   LogOut,
@@ -15,7 +17,6 @@ import {
   Settings,
   User,
   Users,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -52,6 +53,7 @@ const bottomNav = [
   { label: "API Keys", href: "/dashboard/api-keys", icon: Key },
   { label: "Notifications", href: "/dashboard/notifications", icon: BellDot },
   { label: "Team", href: "/dashboard/team", icon: Users },
+  { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -93,12 +95,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar {...props}>
       <SidebarHeader className="px-4 py-5">
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 shadow-md shadow-emerald-500/10">
-            <Zap className="size-4 text-white" strokeWidth={2.5} />
+          <div className="group flex items-center gap-3">
+            {/* Logo mark with extending lines */}
+            <div className="relative">
+              <span className="absolute left-[-4px] top-0 bottom-0 w-px bg-emerald-500/30" />
+              <span className="absolute top-[-4px] left-0 right-0 h-px bg-emerald-500/30" />
+              <div className="flex size-7 items-center justify-center bg-emerald-500/10">
+                <span className="font-mono text-[11px] font-bold text-emerald-400">
+                  C
+                </span>
+              </div>
+            </div>
+            <span className="font-mono text-[13px] tracking-tight text-white/60 transition-colors duration-300 group-hover:text-white/90">
+              costrace
+            </span>
           </div>
-          <span className="text-[15px] font-semibold tracking-tight text-foreground">
-            costrace
-          </span>
         </Link>
       </SidebarHeader>
 
@@ -194,6 +205,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <nav className="flex flex-col gap-0.5">
           {bottomNav.map((item) => {
             const active = isActivePath(item.href, pathname);
+            const isBillingWithPremium =
+              item.label === "Billing" && user?.plan === "premium";
             return (
               <Link
                 key={item.href}
@@ -213,6 +226,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   strokeWidth={1.75}
                 />
                 <span>{item.label}</span>
+                {isBillingWithPremium && (
+                  <Crown
+                    className="ml-auto size-3.5 text-amber-400"
+                    strokeWidth={2}
+                  />
+                )}
               </Link>
             );
           })}
@@ -222,7 +241,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter className="border-t border-white/[0.06] p-3 gap-1">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-zinc-200"
+          className="flex w-full items-center gap-3 rounded-xs px-3 py-2 text-[13px] font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-zinc-200"
         >
           <LogOut className="size-4 text-zinc-500" strokeWidth={1.75} />
           <span>Log out</span>

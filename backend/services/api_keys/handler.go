@@ -78,6 +78,16 @@ func (h *ApiKeyHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		body.TeamID = nil
+
+		// Plan restriction: free users limited to 1 personal API key
+		if user.Plan == models.Free {
+			var keyCount int64
+			h.db.Model(&models.APIKey{}).Where("user_id = ? AND team_id IS NULL", user.ID).Count(&keyCount)
+			if keyCount >= 1 {
+				shared.RespondJSON(w, http.StatusForbidden, map[string]string{"error": "Free plan is limited to 1 API key. Upgrade to Pro for unlimited keys."})
+				return
+			}
+		}
 	}
 
 	apiKey := models.APIKey{

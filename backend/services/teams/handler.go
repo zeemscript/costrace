@@ -31,6 +31,12 @@ func (h *TeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Plan restriction: only Pro users can create teams
+	if user.Plan == models.Free {
+		shared.RespondJSON(w, http.StatusForbidden, map[string]string{"error": "Team creation requires a Pro plan. You can still join teams via invitation."})
+		return
+	}
+
 	//fetch user's teams
 	userTeams, err := h.GetUserTeams(user.ID)
 	if err != nil {

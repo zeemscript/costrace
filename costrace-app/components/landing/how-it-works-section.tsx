@@ -56,14 +56,14 @@ export function HowItWorksSection() {
                   {/* Left: number + title */}
                   <div className="flex items-start gap-4 md:flex-col md:gap-2">
                     {/* Number dot on the line */}
-                    <div className="relative z-10 flex size-[31px] shrink-0 items-center justify-center border border-white/[0.06] bg-zinc-950 font-mono text-[10px] text-white/30 transition-colors duration-500 group-hover:border-emerald-500/20 group-hover:text-emerald-400/60 md:size-[39px] md:text-[11px]">
+                    <div className="relative z-10 flex size-[31px] shrink-0 items-center justify-center border border-white/[0.08] bg-zinc-950 font-mono text-[10px] text-white/50 transition-colors duration-500 group-hover:border-emerald-500/20 group-hover:text-emerald-400/80 md:size-[39px] md:text-[11px]">
                       {step.number}
                     </div>
                     <div>
-                      <h3 className="text-[15px] font-medium text-white/60 transition-colors duration-500 group-hover:text-white/90">
+                      <h3 className="text-[15px] font-medium text-white/80 transition-colors duration-500 group-hover:text-white">
                         {step.title}
                       </h3>
-                      <p className="mt-1 text-sm text-white/20 transition-colors duration-500 group-hover:text-white/40">
+                      <p className="mt-1 text-sm text-white/45 transition-colors duration-500 group-hover:text-white/60">
                         {step.description}
                       </p>
                     </div>
@@ -72,16 +72,16 @@ export function HowItWorksSection() {
                   {/* Right: code block */}
                   <div className="relative ml-12 md:ml-0">
                     {/* Corner ticks */}
-                    <span className="absolute left-0 top-[-6px] h-[calc(100%+12px)] w-px bg-white/[0.04] transition-colors duration-500 group-hover:bg-emerald-500/15" />
-                    <span className="absolute right-0 top-[-6px] h-[calc(100%+12px)] w-px bg-white/[0.04] transition-colors duration-500 group-hover:bg-emerald-500/15" />
-                    <span className="absolute top-0 left-[-6px] w-[calc(100%+12px)] h-px bg-white/[0.04] transition-colors duration-500 group-hover:bg-emerald-500/15" />
-                    <span className="absolute bottom-0 left-[-6px] w-[calc(100%+12px)] h-px bg-white/[0.04] transition-colors duration-500 group-hover:bg-emerald-500/15" />
+                    <span className="absolute left-0 top-[-6px] h-[calc(100%+12px)] w-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
+                    <span className="absolute right-0 top-[-6px] h-[calc(100%+12px)] w-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
+                    <span className="absolute top-0 left-[-6px] w-[calc(100%+12px)] h-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
+                    <span className="absolute bottom-0 left-[-6px] w-[calc(100%+12px)] h-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
 
-                    <div className="flex items-center justify-between bg-white/[0.01] px-5 py-4">
-                      <code className="font-mono text-[13px] text-white/40 transition-colors duration-500 group-hover:text-emerald-400/80">
+                    <div className="flex items-center justify-between bg-white/[0.02] px-5 py-4">
+                      <code className="font-mono text-[13px] text-white/60 transition-colors duration-500 group-hover:text-emerald-400/90">
                         {step.code}
                       </code>
-                      <span className="font-mono text-[9px] uppercase tracking-wider text-white/10">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-white/25">
                         {step.lang}
                       </span>
                     </div>

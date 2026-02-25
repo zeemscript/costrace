@@ -111,6 +111,16 @@ func (h *BudgetAlertHandler) CreateBudgetAlert(w http.ResponseWriter, r *http.Re
 		}
 	} else {
 		body.TeamID = nil
+
+		// Plan restriction: free users limited to 1 personal budget alert
+		if user.Plan == models.Free {
+			var alertCount int64
+			h.db.Model(&models.BudgetAlert{}).Where("user_id = ? AND team_id IS NULL", user.ID).Count(&alertCount)
+			if alertCount >= 1 {
+				shared.RespondJSON(w, http.StatusForbidden, map[string]string{"error": "Free plan is limited to 1 budget alert. Upgrade to Pro for unlimited alerts."})
+				return
+			}
+		}
 	}
 
 	alert := models.BudgetAlert{

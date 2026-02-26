@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy, DollarSign, ExternalLink, Hash, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -15,6 +15,7 @@ import {
 import { CostOverTimeChart } from "@/components/charts/cost-over-time-chart";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { GeographicWidget } from "@/components/widgets/geographic-widget";
+import { useTraceStream } from "@/hooks/use-trace-stream";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 const SDK_TABS = ["Python", "Node.js"] as const;
@@ -42,6 +43,42 @@ export default function DashboardPage() {
   const [sdkTab, setSdkTab] = useState<SdkTab>("Python");
   const [copied, setCopied] = useState<string | null>(null);
   const { activeTeamId } = useWorkspaceStore();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchData = useCallback(
+    (showLoading = false) => {
+      if (showLoading) setLoading(true);
+      Promise.all([
+        getAnalyticsSummary("30d", activeTeamId),
+        getCostOverTime("7d", activeTeamId),
+        getCostByCountry("30d", activeTeamId),
+      ])
+        .then(([summaryRes, chartRes, geoRes]) => {
+          setSummary(summaryRes.data);
+          setChartData(chartRes.data);
+          setGeoData(geoRes.data);
+        })
+        .catch(() => {
+          toast.error("Failed to load dashboard data", {
+            id: "load-dashboard",
+          });
+        })
+        .finally(() => {
+          if (showLoading) setLoading(false);
+        });
+    },
+    [activeTeamId],
+  );
+
+  // Debounced refresh on new traces via SSE
+  useTraceStream(
+    useCallback(() => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        fetchData();
+      }, 2000);
+    }, [fetchData]),
+  );
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -50,22 +87,8 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      getAnalyticsSummary("30d", activeTeamId),
-      getCostOverTime("7d", activeTeamId),
-      getCostByCountry("30d", activeTeamId),
-    ])
-      .then(([summaryRes, chartRes, geoRes]) => {
-        setSummary(summaryRes.data);
-        setChartData(chartRes.data);
-        setGeoData(geoRes.data);
-      })
-      .catch(() => {
-        toast.error("Failed to load dashboard data", { id: "load-dashboard" });
-      })
-      .finally(() => setLoading(false));
-  }, [activeTeamId]);
+    fetchData(true);
+  }, [fetchData]);
 
   return (
     <div className="flex flex-col">

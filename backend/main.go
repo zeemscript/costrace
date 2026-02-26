@@ -14,6 +14,7 @@ import (
 	"github.com/ikotun-dev/costrace/services/auth"
 	"github.com/ikotun-dev/costrace/services/billing"
 	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
+	"github.com/ikotun-dev/costrace/services/sse"
 	"github.com/ikotun-dev/costrace/services/teams"
 	"github.com/ikotun-dev/costrace/services/traces"
 	"github.com/ikotun-dev/costrace/shared"
@@ -71,11 +72,13 @@ func main() {
 		w.Write([]byte(`{"status":"healthy"}`))
 	})
 
-	traceHandler := traces.NewTraceHandler(db)
+	sseHub := sse.NewHub()
+	traceHandler := traces.NewTraceHandler(db, sseHub)
 	apiKeyHandler := apikeys.NewApiKeyHandler(db)
 	analyticsHandler := analytics.NewAnalyticsHandler(db)
 	budgetAlertHandler := budgetalerts.NewBudgetAlertHandler(db)
 	teamHandler := teams.NewTeamHandler(db)
+	sseHandler := sse.NewSSEHandler(db, sseHub)
 	billingHandler := billing.NewBillingHandler(db)
 	authHandler := auth.NewAuthHandler(db, types.AuthConfig{
 		GitHubClientID:     githubClientID,
@@ -100,6 +103,7 @@ func main() {
 		// Dashboard routes — authenticated via JWT
 		r.Group(func(r chi.Router) {
 			r.Use(shared.AuthMiddleware(db, []byte(jwtSecret)))
+			r.Get("/events", sseHandler.StreamEvents)
 			r.Get("/user", authHandler.GetCurrentUser)
 			r.Put("/user", authHandler.UpdateUser)
 			r.Get("/api-keys", apiKeyHandler.ListAPIKeys)

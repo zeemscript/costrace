@@ -139,11 +139,47 @@ export default function BillingPage() {
   }, [user?.polar_customer_id]);
 
   useEffect(() => {
-    if (searchParams.get("success") === "true") {
+    if (searchParams.get("success") !== "true") return;
+
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    // If already premium, just show success
+    if (user?.plan === "premium") {
       toast.success("Subscription activated! Welcome to Pro.");
-      refreshUser();
       fetchOrders();
+      return;
     }
+
+    toast.info("Processing your subscription...");
+
+    intervalId = setInterval(async () => {
+      try {
+        const { data } = await getCurrentUser();
+        if (data.plan === "premium") {
+          if (token) setAuth(data, token);
+          toast.success("Subscription activated! Welcome to Pro.");
+          fetchOrders();
+          if (intervalId) clearInterval(intervalId);
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 3000);
+
+    // Timeout after 30s
+    timeoutId = setTimeout(() => {
+      if (intervalId) clearInterval(intervalId);
+      toast.info(
+        "Still processing your payment. Please refresh in a moment.",
+      );
+    }, 30000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [searchParams]);
 
   useEffect(() => {

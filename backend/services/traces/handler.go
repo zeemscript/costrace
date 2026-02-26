@@ -12,18 +12,21 @@ import (
 
 	"github.com/ikotun-dev/costrace/models"
 	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
+	"github.com/ikotun-dev/costrace/services/sse"
 	"github.com/ikotun-dev/costrace/shared"
 	"github.com/oschwald/geoip2-golang/v2"
 	"gorm.io/gorm"
 )
 
 type TraceHandler struct {
-	db *gorm.DB
+	db  *gorm.DB
+	hub *sse.Hub
 }
 
-func NewTraceHandler(db *gorm.DB) *TraceHandler {
+func NewTraceHandler(db *gorm.DB, hub *sse.Hub) *TraceHandler {
 	return &TraceHandler{
-		db: db,
+		db:  db,
+		hub: hub,
 	}
 }
 
@@ -93,6 +96,11 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go budgetalerts.CheckBudgetAlerts(h.db, &trace)
+
+	// Broadcast to SSE clients
+	if h.hub != nil {
+		h.hub.Broadcast(trace.APIKey, trace)
+	}
 
 	log.Printf("✅ Stored trace: %s | %s | %d tokens | $%.6f",
 		trace.Provider, trace.Model, trace.TokensIn+trace.TokensOut, trace.CostUSD)

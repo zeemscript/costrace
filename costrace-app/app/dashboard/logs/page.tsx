@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { getApiKeys, type APIKey } from "@/api/api-keys";
 import { getTraces, type Trace, type TraceFilters } from "@/api/traces";
+import { useTraceStream } from "@/hooks/use-trace-stream";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -69,6 +70,26 @@ export default function LogsPage() {
   const [timeRange, setTimeRange] = useState("all");
   const [country, setCountry] = useState("all");
 
+  // Live trace updates via SSE
+  const { connected } = useTraceStream(
+    useCallback(
+      (trace: Trace) => {
+        // Only prepend on page 1
+        if (page !== 1) return;
+
+        // Check if trace matches current filters
+        if (apiKey !== "all" && !trace.id) return; // api_key not exposed on Trace type, always accept
+        if (provider !== "all" && trace.provider !== provider) return;
+        if (status !== "all" && trace.status !== status) return;
+        if (country !== "all" && trace.country !== country) return;
+
+        setTraces((prev) => [trace, ...prev].slice(0, PER_PAGE));
+        setTotal((prev) => prev + 1);
+      },
+      [page, apiKey, provider, status, country],
+    ),
+  );
+
   useEffect(() => {
     getApiKeys(activeTeamId)
       .then(({ data }) => setKeys(data))
@@ -115,6 +136,12 @@ export default function LogsPage() {
       <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/80 px-3 backdrop-blur-sm">
         <SidebarTrigger className="-ml-2 md:hidden" />
         <h1 className="text-sm font-semibold">Logs</h1>
+        {connected && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live
+          </span>
+        )}
       </header>
 
       <div className="flex-1 p-3">

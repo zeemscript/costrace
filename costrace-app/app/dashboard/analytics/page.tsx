@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock, DollarSign, Hash, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -21,6 +21,7 @@ import { PeriodSelector } from "@/components/charts/period-selector";
 import { WorldMapChart } from "@/components/charts/world-map-chart";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useTraceStream } from "@/hooks/use-trace-stream";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 export default function AnalyticsPage() {
@@ -34,26 +35,46 @@ export default function AnalyticsPage() {
     "cost",
   );
   const { activeTeamId } = useWorkspaceStore();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchData = useCallback(
+    (showLoading = false) => {
+      if (showLoading) setLoading(true);
+      Promise.all([
+        getAnalyticsSummary(period, activeTeamId),
+        getCostOverTime(period, activeTeamId),
+        getCostByModel(period, activeTeamId),
+        getCostByCountry(period, activeTeamId),
+      ])
+        .then(([summaryRes, overTimeRes, byModelRes, byCountryRes]) => {
+          setSummary(summaryRes.data);
+          setCostOverTime(overTimeRes.data);
+          setCostByModel(byModelRes.data);
+          setCostByCountry(byCountryRes.data);
+        })
+        .catch(() => {
+          toast.error("Failed to load analytics", { id: "load-analytics" });
+        })
+        .finally(() => {
+          if (showLoading) setLoading(false);
+        });
+    },
+    [period, activeTeamId],
+  );
+
+  // Debounced refresh on new traces via SSE
+  useTraceStream(
+    useCallback(() => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        fetchData();
+      }, 2000);
+    }, [fetchData]),
+  );
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      getAnalyticsSummary(period, activeTeamId),
-      getCostOverTime(period, activeTeamId),
-      getCostByModel(period, activeTeamId),
-      getCostByCountry(period, activeTeamId),
-    ])
-      .then(([summaryRes, overTimeRes, byModelRes, byCountryRes]) => {
-        setSummary(summaryRes.data);
-        setCostOverTime(overTimeRes.data);
-        setCostByModel(byModelRes.data);
-        setCostByCountry(byCountryRes.data);
-      })
-      .catch(() => {
-        toast.error("Failed to load analytics", { id: "load-analytics" });
-      })
-      .finally(() => setLoading(false));
-  }, [period, activeTeamId]);
+    fetchData(true);
+  }, [fetchData]);
 
   return (
     <div className="flex flex-col">

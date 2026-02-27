@@ -14,20 +14,21 @@ def init(api_key: str, endpoint: str | None = None):
     try:
         _patch_openai(api_key)
     except ImportError:
-        print("[Costrace] openai not detected - install to enable autotracking")
+        pass
 
     try:
         _patch_anthropic(api_key)
     except ImportError:
-        print("[Costrace] anthropic not detected - install to enable autotracking")
+        pass
 
     try:
         _patch_gemini(api_key)
     except ImportError:
-        print("[Costrace] google-genai not detected - install to enable autotracking")
+        pass
 
 
 # ── OpenAI ────────────────────────────────────────────────────────────────────
+
 
 def _patch_openai(api_key: str):
     import openai
@@ -37,7 +38,7 @@ def _patch_openai(api_key: str):
     elif hasattr(openai, "ChatCompletion"):
         _patch_openai_legacy(api_key)
     else:
-        print("[Costrace] Unknown OpenAI SDK version - auto tracking disabled")
+        return
 
 
 def _patch_openai_v1(api_key: str):
@@ -58,7 +59,6 @@ def _patch_openai_v1(api_key: str):
         self.chat.completions.create = tracked_create
 
     openai.OpenAI.__init__ = wrapped_init
-    print("[Costrace] Patched OpenAI SDK v1.0+")
 
 
 def _patch_openai_legacy(api_key: str):
@@ -70,7 +70,6 @@ def _patch_openai_legacy(api_key: str):
         return _track_completion(_original_create, api_key, *args, **kwargs)
 
     openai.ChatCompletion.create = tracked_create
-    print("[Costrace] Patched OpenAI SDK legacy")
 
 
 def _track_completion(original_func, api_key: str, *args, **kwargs):
@@ -128,6 +127,7 @@ def _track_completion(original_func, api_key: str, *args, **kwargs):
 
 # ── Anthropic ─────────────────────────────────────────────────────────────────
 
+
 def _patch_anthropic(api_key: str):
     import anthropic
 
@@ -146,7 +146,6 @@ def _patch_anthropic(api_key: str):
         self.messages.create = tracked_create
 
     anthropic.Anthropic.__init__ = wrapped_init
-    print("[Costrace] Patched Anthropic SDK")
 
 
 def _track_anthropic_completion(original_func, api_key: str, *args, **kwargs):
@@ -204,6 +203,7 @@ def _track_anthropic_completion(original_func, api_key: str, *args, **kwargs):
 
 # ── Gemini ────────────────────────────────────────────────────────────────────
 
+
 def _patch_gemini(api_key: str):
     from google import genai
 
@@ -222,7 +222,6 @@ def _patch_gemini(api_key: str):
         self.models.generate_content = tracked_generate
 
     genai.Client.__init__ = wrapped_init
-    print("[Costrace] Patched Gemini SDK")
 
 
 def _track_gemini_completion(original_func, api_key: str, *args, **kwargs):
@@ -233,7 +232,7 @@ def _track_gemini_completion(original_func, api_key: str, *args, **kwargs):
     model = kwargs.get("model", args[0] if args else "unknown")
     # normalize "models/gemini-2.0-flash" -> "gemini-2.0-flash"
     if isinstance(model, str) and model.startswith("models/"):
-        model = model[len("models/"):]
+        model = model[len("models/") :]
 
     try:
         response = original_func(*args, **kwargs)

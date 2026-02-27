@@ -1,0 +1,45 @@
+lockfileVersion: '6.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+dependencies:
+  costrace:
+    specifier: ^0.1.0
+    version: 0.1.0(openai@6.25.0)
+  openai:
+    specifier: ^6.25.0
+    version: 6.25.0
+
+packages:
+
+  /costrace@0.1.0(openai@6.25.0):
+    resolution: {integrity: sha512-Le4fpJRFki+t2cU02WX9/ZSLeXc5FpZomvO4koSTCwh9u7iD/3I1dmQIIX0di6h9iVDRSefsS2ODYxgJKgMy0Q==}
+    peerDependencies:
+      '@anthropic-ai/sdk': '>=0.20.0'
+      '@google/genai': '>=0.1.0'
+      openai: '>=4.0.0'
+    peerDependenciesMeta:
+      '@anthropic-ai/sdk':
+        optional: true
+      '@google/genai':
+        optional: true
+      openai:
+        optional: true
+    dependencies:
+      openai: 6.25.0
+    dev: false
+
+  /openai@6.25.0:
+    resolution: {integrity: sha512-mEh6VZ2ds2AGGokWARo18aPISI1OhlgdEIC1ewhkZr8pSIT31dec0ecr9Nhxx0JlybyOgoAT1sWeKtwPZzJyww==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+    dev: false

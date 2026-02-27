@@ -10,8 +10,13 @@ Python SDK for tracking cost, token usage, and latency of LLM API calls. Works b
 
 ## Install
 
+Install with the provider(s) you use:
+
 ```bash
-pip install costrace
+pip install costrace-sdk[openai]       # OpenAI only
+pip install costrace-sdk[anthropic]    # Anthropic only
+pip install costrace-sdk[gemini]       # Gemini only
+pip install costrace-sdk[all]          # all providers
 ```
 
 ## Usage

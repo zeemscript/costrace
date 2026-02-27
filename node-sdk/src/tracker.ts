@@ -54,7 +54,6 @@ export function sendTrace(data: TraceData): boolean {
     return false;
   }
 
-  // Fire-and-forget — don't await
   fetch(_endpoint, {
     method: "POST",
     headers: {
@@ -67,12 +66,12 @@ export function sendTrace(data: TraceData): boolean {
     .then((res) => {
       if (!res.ok) {
         res.text().then((text) => {
-          console.log(`[Costrace] Error response: ${text}`);
+          console.warn(`[Costrace] Error response: ${text}`);
         });
       }
     })
     .catch((err) => {
-      console.log(`[Costrace] Failed to send trace: ${err}`);
+      console.warn(`[Costrace] Failed to send trace: ${err}`);
     });
 
   return true;

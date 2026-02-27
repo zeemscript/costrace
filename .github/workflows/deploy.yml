@@ -23,10 +23,12 @@ jobs:
           # Validate key format
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
 
-      - name: SSH into VPS and deploy Postuno
+      - name: SSH into VPS and deploy costrace
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd ~/costrace/backend
+            cd ~/costrace
             git pull origin main
+            cd backend
+            docker compose down
             docker compose up -d --build
           EOF

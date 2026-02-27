@@ -23,7 +23,7 @@ jobs:
           # Validate key format
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
 
-      - name: SSH into VPS and deploy costrace
+      - name: deploy costrace
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd ~/costrace

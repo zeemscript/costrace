@@ -56,14 +56,14 @@ export function Footer() {
                 costrace
               </span>
             </Link>
-            <p className="mt-4 max-w-[220px] text-[13px] leading-relaxed text-white/20">
+            <p className="mt-4 max-w-[220px] text-[13px] leading-relaxed text-white/50">
               Track your LLM costs with confidence.
             </p>
 
             {/* Install hint */}
             <div className="mt-6 flex items-center gap-3">
               <span className="h-px w-6 bg-white/[0.06]" />
-              <code className="font-mono text-[11px] text-white/10">
+              <code className="font-mono text-[11px] text-white/40">
                 uv add costrace
               </code>
             </div>
@@ -72,7 +72,7 @@ export function Footer() {
           {/* Link columns */}
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/25">
+              <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/50">
                 {col.title}
               </h3>
               <ul className="mt-5 flex flex-col gap-3">
@@ -80,7 +80,7 @@ export function Footer() {
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      className="text-[13px] text-white/20 transition-colors duration-300 hover:text-white/50"
+                      className="text-[13px] text-white/50 transition-colors duration-300 hover:text-white/70"
                     >
                       {link.label}
                     </a>
@@ -97,13 +97,13 @@ export function Footer() {
           <span className="absolute left-0 top-[-6px] h-[13px] w-px bg-white/[0.04]" />
 
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/10">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
               &copy; {new Date().getFullYear()} costrace. All rights reserved.
             </p>
 
             <div className="flex items-center gap-1.5">
               <span className="size-1.5 rounded-full bg-emerald-500/30" />
-              <span className="font-mono text-[10px] text-white/10">
+              <span className="font-mono text-[10px] text-white/30">
                 all systems operational
               </span>
             </div>

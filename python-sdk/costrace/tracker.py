@@ -3,7 +3,7 @@ import threading
 import requests
 
 _api_key: str | None = None
-_endpoint: str = "http://localhost:8080/v1/traces"
+_endpoint = "https://api.costrace.dev/v1/traces"
 _enabled: bool = True
 
 

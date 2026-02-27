@@ -1,7 +1,7 @@
 [project]
-name = "python"
+name = "costrace-sdk"
 version = "0.1.0"
-description = "Add your description here"
+description = "Costrace python SDK for tracking cost, token usage, and latency of LLM API calls. Works by monkey-patching supported LLM client libraries so existing code requires no changes."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

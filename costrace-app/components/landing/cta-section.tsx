@@ -32,7 +32,7 @@ const features = [
   },
   {
     name: "API keys",
-    values: { free: "2", pro: "Unlimited" },
+    values: { free: "1", pro: "Unlimited" },
   },
   {
     name: "Budget alerts",
@@ -51,19 +51,19 @@ const features = [
   },
   {
     name: "Cost breakdown by model",
-    values: { free: "✓", pro: "✓" },
+    values: { free: "✅", pro: "✅" },
   },
   {
     name: "Geographic distribution",
-    values: { free: "✓", pro: "✓" },
+    values: { free: "✅", pro: "✅" },
   },
   {
     name: "Team members",
-    values: { free: "—", pro: "Coming soon" },
+    values: { free: "❌", pro: "Unlimited" },
   },
   {
     name: "Priority support",
-    values: { free: "—", pro: "✓" },
+    values: { free: "❌", pro: "✅" },
   },
 ];
 
@@ -112,7 +112,7 @@ export function PricingSection() {
                     <span className="absolute top-0 left-0 right-0 h-px bg-emerald-500/30" />
                   )}
 
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/50">
                     {plan.name}
                   </p>
                   <div className="mt-2 flex items-baseline justify-center gap-0.5">
@@ -120,12 +120,12 @@ export function PricingSection() {
                       {plan.price}
                     </span>
                     {plan.period && (
-                      <span className="font-mono text-[11px] text-white/20">
+                      <span className="font-mono text-[11px] text-white/50">
                         {plan.period}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1.5 text-[11px] text-white/15">
+                  <p className="mt-1.5 text-[11px] text-white/50">
                     {plan.description}
                   </p>
                 </div>
@@ -144,10 +144,10 @@ export function PricingSection() {
                 {/* Feature name */}
                 <div className="flex items-center p-5">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10px] text-white/10">
+                    <span className="font-mono text-[10px] text-white/30">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="text-[13px] text-white/40 transition-colors duration-300 group-hover:text-white/60">
+                    <span className="text-[13px] text-white/60 transition-colors duration-300 group-hover:text-white/80">
                       {feature.name}
                     </span>
                   </div>
@@ -170,12 +170,12 @@ export function PricingSection() {
                       <span
                         className={`font-mono text-[12px] transition-colors duration-300 ${
                           isDisabled
-                            ? "text-white/10"
+                            ? "text-white/30"
                             : isComingSoon
-                              ? "text-white/15 italic"
+                              ? "text-white/40 italic"
                               : plan.highlighted
-                                ? "text-emerald-400/50 group-hover:text-emerald-400/80"
-                                : "text-white/30 group-hover:text-white/50"
+                                ? "text-emerald-400/70 group-hover:text-emerald-400/90"
+                                : "text-white/50 group-hover:text-white/70"
                         }`}
                       >
                         {value}
@@ -212,7 +212,7 @@ export function PricingSection() {
                       className={`relative cursor-pointer px-6 py-2.5 font-mono text-[11px] uppercase tracking-wider transition-all duration-300 ${
                         plan.highlighted
                           ? "bg-emerald-500/10 text-emerald-400/70 hover:bg-emerald-500/20 hover:text-emerald-400"
-                          : "bg-white/[0.02] text-white/30 hover:bg-white/[0.04] hover:text-white/50"
+                          : "bg-white/[0.02] text-white/50 hover:bg-white/[0.04] hover:text-white/70"
                       }`}
                     >
                       {plan.cta}

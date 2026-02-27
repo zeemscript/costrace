@@ -33,7 +33,7 @@ export function HeroSection() {
           </h1>
 
           {/* Subtext */}
-          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/30">
+          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/60">
             Track every API call, monitor costs in real-time, and get alerts
             before your budget runs out. One line of code.
           </p>
@@ -62,7 +62,7 @@ export function HeroSection() {
               href="https://docs.costrace.dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-[11px] uppercase tracking-wider text-white/20 transition-colors duration-300 hover:text-white/50"
+              className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition-colors duration-300 hover:text-white/70"
             >
               Read the docs →
             </a>
@@ -72,7 +72,7 @@ export function HeroSection() {
         {/* Install hint */}
         <div className="mt-16 flex items-center gap-4">
           <span className="h-px w-8 bg-white/[0.06]" />
-          <code className="font-mono text-[12px] text-white/15">
+          <code className="font-mono text-[12px] text-white/40">
             uv add costrace / npm install costrace
           </code>
         </div>

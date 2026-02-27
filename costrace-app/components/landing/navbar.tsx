@@ -60,7 +60,7 @@ export function Navbar() {
               )}
               <a
                 href={link.href}
-                className="font-mono text-[11px] uppercase tracking-wider text-white/25 transition-colors duration-300 hover:text-white/60"
+                className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition-colors duration-300 hover:text-white/70"
               >
                 {link.label}
               </a>
@@ -72,7 +72,7 @@ export function Navbar() {
         <div className="hidden items-center gap-5 md:flex">
           <Link
             href="/auth"
-            className="font-mono text-[11px] uppercase tracking-wider text-white/20 transition-colors duration-300 hover:text-white/50"
+            className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition-colors duration-300 hover:text-white/70"
           >
             Sign in
           </Link>
@@ -115,10 +115,10 @@ export function Navbar() {
                   onClick={() => setMobileOpen(false)}
                   className="group flex items-center gap-3 py-3"
                 >
-                  <span className="font-mono text-[10px] text-white/10">
+                  <span className="font-mono text-[10px] text-white/30">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="font-mono text-[12px] uppercase tracking-wider text-white/30 transition-colors group-hover:text-white/60">
+                  <span className="font-mono text-[12px] uppercase tracking-wider text-white/50 transition-colors group-hover:text-white/70">
                     {link.label}
                   </span>
                 </a>

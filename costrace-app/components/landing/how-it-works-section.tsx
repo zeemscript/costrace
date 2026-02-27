@@ -36,7 +36,7 @@ export function HowItWorksSection() {
               {"// setup"}
             </p>
             <h2 className="mt-4 text-2xl font-medium tracking-tight text-white/90 sm:text-3xl">
-              Three lines of code.
+              Two lines of code.
               <br />
               That&apos;s the entire setup.
             </h2>
@@ -56,14 +56,14 @@ export function HowItWorksSection() {
                   {/* Left: number + title */}
                   <div className="flex items-start gap-4 md:flex-col md:gap-2">
                     {/* Number dot on the line */}
-                    <div className="relative z-10 flex size-[31px] shrink-0 items-center justify-center border border-white/[0.08] bg-zinc-950 font-mono text-[10px] text-white/50 transition-colors duration-500 group-hover:border-emerald-500/20 group-hover:text-emerald-400/80 md:size-[39px] md:text-[11px]">
+                    <div className="relative z-10 flex size-[31px] shrink-0 items-center justify-center border border-white/[0.08] bg-zinc-950 font-mono text-[10px] text-white/60 transition-colors duration-500 group-hover:border-emerald-500/20 group-hover:text-emerald-400/80 md:size-[39px] md:text-[11px]">
                       {step.number}
                     </div>
                     <div>
                       <h3 className="text-[15px] font-medium text-white/80 transition-colors duration-500 group-hover:text-white">
                         {step.title}
                       </h3>
-                      <p className="mt-1 text-sm text-white/45 transition-colors duration-500 group-hover:text-white/60">
+                      <p className="mt-1 text-sm text-white/60 transition-colors duration-500 group-hover:text-white/80">
                         {step.description}
                       </p>
                     </div>
@@ -81,7 +81,7 @@ export function HowItWorksSection() {
                       <code className="font-mono text-[13px] text-white/60 transition-colors duration-500 group-hover:text-emerald-400/90">
                         {step.code}
                       </code>
-                      <span className="font-mono text-[9px] uppercase tracking-wider text-white/25">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-white/50">
                         {step.lang}
                       </span>
                     </div>

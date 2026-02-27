@@ -434,7 +434,7 @@ export function SdkShowcaseSection() {
           <h2 className="mt-4 text-2xl font-medium tracking-tight text-white/90 sm:text-3xl">
             One line. Every provider.
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-white/30">
+          <p className="mt-3 text-sm leading-relaxed text-white/60">
             Add Costrace to your project and every LLM API call is tracked
             automatically. No wrappers, no config files.
           </p>
@@ -459,8 +459,8 @@ export function SdkShowcaseSection() {
                     onClick={() => setActiveLang(lang)}
                     className={`relative cursor-pointer px-5 py-3.5 font-mono text-[11px] uppercase tracking-wider transition-colors duration-300 ${
                       activeLang === lang
-                        ? "text-white/70"
-                        : "text-white/20 hover:text-white/40"
+                        ? "text-white/80"
+                        : "text-white/50 hover:text-white/70"
                     }`}
                   >
                     {lang}
@@ -480,7 +480,7 @@ export function SdkShowcaseSection() {
                     className={`cursor-pointer px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-300 ${
                       activeProvider === provider
                         ? "bg-emerald-500/10 text-emerald-400/70"
-                        : "text-white/15 hover:text-white/30"
+                        : "text-white/40 hover:text-white/60"
                     }`}
                   >
                     {provider}
@@ -499,15 +499,15 @@ export function SdkShowcaseSection() {
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
                   <span className="size-1.5 rounded-full bg-emerald-500/50" />
-                  <span className="font-mono text-[10px] text-white/20">
+                  <span className="font-mono text-[10px] text-white/50">
                     auto-instrumented
                   </span>
                 </span>
-                <span className="font-mono text-[10px] text-white/10">
+                <span className="font-mono text-[10px] text-white/30">
                   cost · latency · tokens
                 </span>
               </div>
-              <span className="font-mono text-[10px] text-white/10">
+              <span className="font-mono text-[10px] text-white/30">
                 {activeLang === "Python" ? "python" : "typescript"} ·{" "}
                 {activeProvider.toLowerCase()}
               </span>

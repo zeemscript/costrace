@@ -62,7 +62,7 @@ export function FeaturesSection() {
                 <div className="grid grid-cols-1 gap-8 py-10 md:grid-cols-[auto_1fr_auto] md:items-center md:gap-16">
                   {/* Left: number + icon */}
                   <div className="flex items-center gap-5">
-                    <span className="font-mono text-[11px] text-white/30">
+                    <span className="font-mono text-[11px] text-white/50">
                       0{i + 1}
                     </span>
                     <div className="flex size-10 items-center justify-center border border-white/[0.08] bg-white/[0.03] transition-colors duration-500 group-hover:border-emerald-500/20 group-hover:bg-emerald-500/5">
@@ -75,17 +75,17 @@ export function FeaturesSection() {
                     <h3 className="text-[15px] font-medium text-white/90 transition-colors duration-500 group-hover:text-white">
                       {feature.title}
                     </h3>
-                    <p className="mt-1.5 max-w-lg text-sm leading-relaxed text-white/50 transition-colors duration-500 group-hover:text-white/60">
+                    <p className="mt-1.5 max-w-lg text-sm leading-relaxed text-white/70 transition-colors duration-500 group-hover:text-white/80">
                       {feature.description}
                     </p>
                   </div>
 
                   {/* Right: metric */}
                   <div className="text-right">
-                    <p className="font-mono text-2xl font-light tracking-tight text-white/40 transition-colors duration-500 group-hover:text-emerald-400/80">
+                    <p className="font-mono text-2xl font-light tracking-tight text-white/60 transition-colors duration-500 group-hover:text-emerald-400/80">
                       {feature.metric}
                     </p>
-                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-white/30 transition-colors duration-500 group-hover:text-white/50">
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-white/50 transition-colors duration-500 group-hover:text-white/70">
                       {feature.metricLabel}
                     </p>
                   </div>

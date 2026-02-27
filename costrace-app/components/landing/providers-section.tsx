@@ -22,8 +22,8 @@ export function ProvidersSection() {
                 key={name}
                 className="group relative flex flex-col items-center gap-3 px-16 py-6"
               >
-                <Logo className="size-6 text-white/20 transition-colors duration-500 group-hover:text-white/60" />
-                <span className="font-mono text-[11px] uppercase tracking-wider text-white/15 transition-colors duration-500 group-hover:text-white/40">
+                <Logo className="size-6 text-white/50 transition-colors duration-500 group-hover:text-white/70" />
+                <span className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition-colors duration-500 group-hover:text-white/70">
                   {name}
                 </span>
 

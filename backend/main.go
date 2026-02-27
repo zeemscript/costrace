@@ -31,7 +31,6 @@ func main() {
 		dbUrl = "postgresql://postgres@localhost:5432/costrace"
 	}
 
-	// GitHub OAuth configuration
 	githubClientID := os.Getenv("GITHUB_CLIENT_ID")
 	githubClientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
 	githubRedirectURL := os.Getenv("GITHUB_REDIRECT_URL")
@@ -42,7 +41,7 @@ func main() {
 	// JWT configuration
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "your-secret-key-change-in-production"
+		jwtSecret = "SecretKey2190"
 	}
 
 	// Validate required environment variables

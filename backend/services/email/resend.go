@@ -10,10 +10,10 @@ import (
 )
 
 type resendPayload struct {
-	From    string `json:"from"`
+	From    string   `json:"from"`
 	To      []string `json:"to"`
-	Subject string `json:"subject"`
-	HTML    string `json:"html"`
+	Subject string   `json:"subject"`
+	HTML    string   `json:"html"`
 }
 
 func SendBudgetAlert(to, alertName, currentSpend, threshold, period string) error {
@@ -36,7 +36,7 @@ func SendBudgetAlert(to, alertName, currentSpend, threshold, period string) erro
 </div>`, alertName, currentSpend, threshold, period, period)
 
 	payload := resendPayload{
-		From:    "Costrace Alerts <alerts@issueiq.dev>",
+		From:    "Costrace Alerts <alerts@costrace.dev>",
 		To:      []string{to},
 		Subject: fmt.Sprintf("Budget Alert: %s threshold reached", alertName),
 		HTML:    html,
@@ -91,7 +91,7 @@ func SendMagicLink(to, token string) error {
 </div>`, loginURL)
 
 	payload := resendPayload{
-		From:    "Costrace <auth@issueiq.dev>",
+		From:    "Costrace <auth@costrace.dev>",
 		To:      []string{to},
 		Subject: "Your Costrace login link",
 		HTML:    html,

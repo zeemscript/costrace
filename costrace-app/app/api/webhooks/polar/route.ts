@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Polar webhook events we care about
 // See: https://docs.polar.sh/api-reference/webhooks
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8080";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -15,9 +17,7 @@ export async function POST(req: NextRequest) {
 
         if (!customerEmail) break;
 
-        // Call your Go backend to update the user's plan
-        const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
-        await fetch(`${backendUrl}/v1/webhooks/polar`, {
+        await fetch(`${BACKEND_URL}/v1/webhooks/polar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -38,8 +38,7 @@ export async function POST(req: NextRequest) {
 
         if (!customerEmail) break;
 
-        const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
-        await fetch(`${backendUrl}/v1/webhooks/polar`, {
+        await fetch(`${BACKEND_URL}/v1/webhooks/polar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

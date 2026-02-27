@@ -1,16 +1,16 @@
-import axios from "axios"
-import { useUserStore } from "@/stores/user-store"
+import { useUserStore } from "@/stores/user-store";
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080",
-})
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
+});
 
 api.interceptors.request.use((config) => {
-  const token = useUserStore.getState().token
+  const token = useUserStore.getState().token;
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  return config
-})
+  return config;
+});
 
-export default api
+export default api;

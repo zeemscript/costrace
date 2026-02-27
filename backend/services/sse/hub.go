@@ -54,3 +54,13 @@ func (h *Hub) Broadcast(apiKey string, trace models.Trace) {
 		}
 	}
 }
+
+func (h *Hub) ConnectionCount(apiKeys []string) int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	count := 0
+	for _, key := range apiKeys {
+		count += len(h.clients[key])
+	}
+	return count
+}

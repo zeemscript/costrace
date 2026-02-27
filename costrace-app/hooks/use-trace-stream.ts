@@ -2,10 +2,13 @@ import { useUserStore } from "@/stores/user-store";
 import type { Trace } from "@/types/trace";
 import { useEffect, useRef, useState } from "react";
 
-const SSE_BASE_URL = "http://localhost:8080/v1/events";
+const SSE_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/v1/events`;
 const MAX_RETRY_DELAY = 30_000;
 
-export function useTraceStream(onTrace: (trace: Trace) => void): {
+export function useTraceStream(
+  onTrace: (trace: Trace) => void,
+  teamId?: number | null,
+): {
   connected: boolean;
 } {
   const [connected, setConnected] = useState(false);
@@ -24,21 +27,23 @@ export function useTraceStream(onTrace: (trace: Trace) => void): {
     function connect() {
       if (disposed) return;
 
-      es = new EventSource(`${SSE_BASE_URL}?token=${token}`);
+      let url = `${SSE_BASE_URL}?token=${token}`;
+      if (teamId) url += `&team_id=${teamId}`;
+      es = new EventSource(url);
 
       es.addEventListener("connected", () => {
         setConnected(true);
         retryDelay = 1000;
       });
 
-      es.onmessage = (event) => {
+      es.addEventListener("trace", (event) => {
         try {
           const trace: Trace = JSON.parse(event.data);
           onTraceRef.current(trace);
         } catch {
           // ignore malformed events
         }
-      };
+      });
 
       es.onerror = () => {
         setConnected(false);
@@ -60,7 +65,7 @@ export function useTraceStream(onTrace: (trace: Trace) => void): {
       if (retryTimeout) clearTimeout(retryTimeout);
       setConnected(false);
     };
-  }, [token]);
+  }, [token, teamId]);
 
   return { connected };
 }

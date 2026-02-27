@@ -3,7 +3,9 @@ package sse
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/ikotun-dev/costrace/models"
 	"github.com/ikotun-dev/costrace/shared"
@@ -29,9 +31,24 @@ func (h *SSEHandler) StreamEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, err := shared.GetScopedKeys(h.db, user, nil)
+	var teamID *uint
+	if tidStr := r.URL.Query().Get("team_id"); tidStr != "" {
+		if tid, err := strconv.ParseUint(tidStr, 10, 64); err == nil && tid > 0 {
+			tidUint := uint(tid)
+			teamID = &tidUint
+		}
+	}
+
+	keys, err := shared.GetScopedKeys(h.db, user, teamID)
 	if err != nil || len(keys) == 0 {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	const maxSSEConnsPerUser = 5
+	if h.hub.ConnectionCount(keys) >= maxSSEConnsPerUser {
+		log.Printf("User %s reached max connections", user.ID)
+		http.Error(w, "Max connections reached", http.StatusTooManyRequests)
 		return
 	}
 
@@ -53,7 +70,7 @@ func (h *SSEHandler) StreamEvents(w http.ResponseWriter, r *http.Request) {
 		close(ch)
 	}()
 
-	fmt.Fprintf(w, "event: connected\ndata: {\"status\":\"connected\"}\n\n")
+	fmt.Fprintf(w, "event: connected\ndata: {\"status for stream\":\"connected\"}\n\n")
 	flusher.Flush()
 	ctx := r.Context()
 

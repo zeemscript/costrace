@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { getApiKeys, type APIKey } from "@/api/api-keys";
 import { getTraces, type Trace, type TraceFilters } from "@/api/traces";
-import { useTraceStream } from "@/hooks/use-trace-stream";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -24,11 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTraceStream } from "@/hooks/use-trace-stream";
 import { getCountryWithFlag } from "@/lib/country-flags";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 const PROVIDERS = ["openai", "anthropic", "gemini"];
-const PER_PAGE = 20;
+const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 const TIME_RANGES: { label: string; value: string }[] = [
   { label: "All time", value: "all" },
@@ -55,6 +55,7 @@ export default function LogsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const { activeTeamId } = useWorkspaceStore();
+  const [perPage, setPerPage] = useState(25);
 
   // Extract unique countries from traces for filter
   const uniqueCountries = Array.from(
@@ -77,17 +78,17 @@ export default function LogsPage() {
         // Only prepend on page 1
         if (page !== 1) return;
 
-        // Check if trace matches current filters
         if (apiKey !== "all" && !trace.id) return; // api_key not exposed on Trace type, always accept
         if (provider !== "all" && trace.provider !== provider) return;
         if (status !== "all" && trace.status !== status) return;
         if (country !== "all" && trace.country !== country) return;
 
-        setTraces((prev) => [trace, ...prev].slice(0, PER_PAGE));
+        setTraces((prev) => [trace, ...prev].slice(0, perPage));
         setTotal((prev) => prev + 1);
       },
-      [page, apiKey, provider, status, country],
+      [page, apiKey, provider, status, country, perPage],
     ),
+    activeTeamId,
   );
 
   useEffect(() => {
@@ -96,15 +97,14 @@ export default function LogsPage() {
       .catch(() => {});
   }, [activeTeamId]);
 
-  // Reset to page 1 when filters or workspace change
   useEffect(() => {
     setPage(1);
-  }, [apiKey, provider, status, timeRange, country, activeTeamId]);
+  }, [apiKey, provider, status, timeRange, country, activeTeamId, perPage]);
 
   const fetchTraces = useCallback(async () => {
     setLoading(true);
     try {
-      const params: TraceFilters = { page, per_page: PER_PAGE };
+      const params: TraceFilters = { page, per_page: perPage };
       if (activeTeamId) params.team_id = activeTeamId;
       if (apiKey !== "all") params.api_key = apiKey;
       if (provider !== "all") params.provider = provider;
@@ -121,15 +121,24 @@ export default function LogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [apiKey, provider, status, timeRange, country, page, activeTeamId]);
+  }, [
+    apiKey,
+    provider,
+    status,
+    timeRange,
+    country,
+    page,
+    perPage,
+    activeTeamId,
+  ]);
 
   useEffect(() => {
     fetchTraces();
   }, [fetchTraces]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const from = (page - 1) * PER_PAGE + 1;
-  const to = Math.min(page * PER_PAGE, total);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const from = (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, total);
 
   return (
     <div className="flex flex-col">
@@ -147,68 +156,86 @@ export default function LogsPage() {
       <div className="flex-1 p-3">
         <div className="mx-auto max-w-9xl">
           {/* Filter bar */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={apiKey} onValueChange={setApiKey}>
-              <SelectTrigger className="w-[180px] rounded-xs">
-                <SelectValue placeholder="All keys" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All keys</SelectItem>
-                {keys.map((k) => (
-                  <SelectItem key={k.id} value={k.key}>
-                    {k.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={apiKey} onValueChange={setApiKey}>
+                <SelectTrigger className="w-[180px] rounded-xs">
+                  <SelectValue placeholder="All keys" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All keys</SelectItem>
+                  {keys.map((k) => (
+                    <SelectItem key={k.id} value={k.key}>
+                      {k.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select value={provider} onValueChange={setProvider}>
-              <SelectTrigger className="w-[150px] rounded-xs">
-                <SelectValue placeholder="All providers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All providers</SelectItem>
-                {PROVIDERS.map((p) => (
-                  <SelectItem key={p} value={p}>
-                    {p}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Select value={provider} onValueChange={setProvider}>
+                <SelectTrigger className="w-[150px] rounded-xs">
+                  <SelectValue placeholder="All providers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All providers</SelectItem>
+                  {PROVIDERS.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-[130px] rounded-xs">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="success">Success</SelectItem>
-                <SelectItem value="error">Error</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-[130px] rounded-xs">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="success">Success</SelectItem>
+                  <SelectItem value="error">Error</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Select value={timeRange} onValueChange={setTimeRange}>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[140px] rounded-xs">
+                  <SelectValue placeholder="All time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_RANGES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger className="w-[140px] rounded-xs">
+                  <SelectValue placeholder="All countries" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All countries</SelectItem>
+                  {uniqueCountries.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Select
+              value={perPage.toString()}
+              onValueChange={(v) => setPerPage(Number(v))}
+            >
               <SelectTrigger className="w-[140px] rounded-xs">
-                <SelectValue placeholder="All time" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TIME_RANGES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={country} onValueChange={setCountry}>
-              <SelectTrigger className="w-[140px] rounded-xs">
-                <SelectValue placeholder="All countries" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All countries</SelectItem>
-                {uniqueCountries.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
+                {PER_PAGE_OPTIONS.map((n) => (
+                  <SelectItem key={n} value={n.toString()}>
+                    {n} / page
                   </SelectItem>
                 ))}
               </SelectContent>

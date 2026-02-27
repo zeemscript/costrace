@@ -20,8 +20,7 @@ export default function InviteAcceptPage() {
   >("idle");
   const [error, setError] = useState("");
 
-  const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   async function handleAccept() {
     setStatus("accepting");

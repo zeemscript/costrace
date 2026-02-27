@@ -14,21 +14,19 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup SSH
+        env:
+          VPS_DEPLOY_KEY: ${{ secrets.VPS_DEPLOY_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
           chmod 700 ~/.ssh
+          echo "${VPS_DEPLOY_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-          # Validate key format
-          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
 
-      - name: deploy costrace
+      - name: Deploy costrace
         run: |
-          ssh -T  ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd ~/costrace
-            git pull origin main
-            cd backend
-            docker compose down
-            docker compose up -d --build
-          EOF
+          ssh -o StrictHostKeyChecking=no \
+              -o BatchMode=yes \
+              -i ~/.ssh/id_ed25519 \
+              ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+              "cd ~/costrace && git pull origin main && cd backend && docker compose down && docker compose up -d --build"

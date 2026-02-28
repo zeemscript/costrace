@@ -1,18 +1,17 @@
 package billing
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ikotun-dev/costrace/models"
 	"github.com/ikotun-dev/costrace/shared"
+	standardwebhooks "github.com/standard-webhooks/standard-webhooks/libraries/go"
 	"gorm.io/gorm"
 )
 
@@ -34,18 +33,25 @@ type polarWebhookPayload struct {
 	Data map[string]any `json:"data"`
 }
 
-// verifyWebhookSignature validates the Polar webhook signature
-func (h *BillingHandler) verifyWebhookSignature(body []byte, signature string) bool {
+// verifyWebhookSignature validates the Polar webhook signature using Standard Webhooks
+func (h *BillingHandler) verifyWebhookSignature(body []byte, headers http.Header) error {
 	if h.webhookSecret == "" {
 		log.Printf("WARNING: POLAR_WEBHOOK_SECRET not set - skipping signature verification")
-		return true
+		return nil
 	}
 
-	mac := hmac.New(sha256.New, []byte(h.webhookSecret))
-	mac.Write(body)
-	expectedMAC := hex.EncodeToString(mac.Sum(nil))
+	// Strip the polar_whs_ prefix if present
+	secret := h.webhookSecret
+	if strings.HasPrefix(secret, "polar_whs_") {
+		secret = strings.TrimPrefix(secret, "polar_whs_")
+	}
 
-	return hmac.Equal([]byte(signature), []byte(expectedMAC))
+	wh, err := standardwebhooks.NewWebhook(secret)
+	if err != nil {
+		return err
+	}
+
+	return wh.Verify(body, headers)
 }
 
 func (h *BillingHandler) HandlePolarWebhook(w http.ResponseWriter, r *http.Request) {
@@ -56,10 +62,9 @@ func (h *BillingHandler) HandlePolarWebhook(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Verify webhook signature
-	signature := r.Header.Get("X-Polar-Webhook-Signature")
-	if !h.verifyWebhookSignature(body, signature) {
-		log.Printf("Invalid webhook signature")
+	// Verify webhook signature using Standard Webhooks
+	if err := h.verifyWebhookSignature(body, r.Header); err != nil {
+		log.Printf("Invalid webhook signature: %v", err)
 		shared.RespondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid signature"})
 		return
 	}

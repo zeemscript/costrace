@@ -4,8 +4,9 @@ const steps = [
   {
     number: "01",
     title: "Install the SDK",
-    description: "Add Costrace to your project with a single command.",
-    code: "uv add costrace",
+    description:
+      "Add Costrace to your project with a single command. (This sample is for the python sdk)",
+    code: "uv add costrace-sdk",
     lang: "bash",
   },
   {

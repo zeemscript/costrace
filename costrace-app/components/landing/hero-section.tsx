@@ -56,15 +56,13 @@ export function HeroSection() {
               </Link>
             </div>
 
-            {/* Secondary CTA */}
-
             <a
               href="https://docs.costrace.dev"
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition-colors duration-300 hover:text-white/70"
             >
-              Read the docs →
+              Read the docs
             </a>
           </div>
         </div>
@@ -73,7 +71,7 @@ export function HeroSection() {
         <div className="mt-16 flex items-center gap-4">
           <span className="h-px w-8 bg-white/[0.06]" />
           <code className="font-mono text-[12px] text-white/40">
-            uv add costrace / npm install costrace
+            npm install costrace
           </code>
         </div>
 
@@ -89,7 +87,6 @@ export function HeroSection() {
             <span className="absolute top-0 left-[-40px] right-[-40px] h-px bg-emerald-950" />
             <span className="absolute bottom-0 left-[-40px] right-[-40px] h-px bg-emerald-950" />
 
-            {/* Corner markers — small crosses at intersections */}
             {/* Top-left */}
             <span className="absolute top-[-3px] left-[-3px] size-[7px] border border-emerald-500/20 bg-background" />
             {/* Top-right */}

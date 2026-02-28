@@ -16,6 +16,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "costrace",
   description: "Track and monitor your LLM API costs",
+  openGraph: {
+    title: "costrace",
+    description: "Track and monitor your LLM API costs",
+    images: [
+      {
+        url: "/desktop-dashboard.png",
+        width: 1200,
+        height: 630,
+        alt: "costrace dashboard",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "costrace",
+    description: "Track and monitor your LLM API costs",
+    images: ["/desktop-dashboard.png"],
+  },
 };
 
 export default function RootLayout({

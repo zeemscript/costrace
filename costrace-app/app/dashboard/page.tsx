@@ -22,7 +22,7 @@ const SDK_TABS = ["Python", "Node.js"] as const;
 type SdkTab = (typeof SDK_TABS)[number];
 
 const installCommands: Record<SdkTab, string> = {
-  Python: "pip install costrace",
+  Python: "pip install costrace-sdk",
   "Node.js": "npm install costrace",
 };
 

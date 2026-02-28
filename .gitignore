@@ -13,3 +13,4 @@ node_modules
 .env
 .env.prod
 .examples
+.DS_Store

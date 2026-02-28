@@ -153,7 +153,7 @@ export default function LoginPage() {
           <p className="text-[11px] text-white/15">
             By continuing, you agree to our{" "}
             <a
-              href="#"
+              href="/terms"
               className="text-white/25 underline underline-offset-4 transition-colors hover:text-white/40"
             >
               Terms of Service

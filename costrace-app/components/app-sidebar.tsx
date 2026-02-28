@@ -28,6 +28,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/stores/user-store";
@@ -67,6 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const { user, logout } = useUserStore();
   const { activeTeamId, activeTeam, setActiveWorkspace } = useWorkspaceStore();
+  const { setOpenMobile, isMobile } = useSidebar();
 
   const initials = (user?.username ?? "U")
     .split(" ")
@@ -87,6 +89,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   function handleSelectTeam(team: Team) {
     setActiveWorkspace(team);
+  }
+
+  function closeSidebarOnMobile() {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   }
 
   const workspaceLabel = activeTeam ? activeTeam.name : "Personal";
@@ -180,6 +188,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={closeSidebarOnMobile}
                 className={cn(
                   "cursor-pointer flex items-center gap-3 rounded-xs px-3 py-2 text-[13px] font-medium transition-colors my-1",
                   active
@@ -211,6 +220,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={closeSidebarOnMobile}
                 className={cn(
                   "cursor-pointer flex items-center gap-3 rounded-xs px-3 py-2 text-[13px] font-medium transition-colors my-1",
                   active
@@ -240,7 +250,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter className="border-t border-white/[0.06] p-3 gap-1">
         <button
-          onClick={handleLogout}
+          onClick={() => {
+            closeSidebarOnMobile();
+            handleLogout();
+          }}
           className="flex w-full items-center gap-3 rounded-xs px-3 py-2 text-[13px] font-medium text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-zinc-200"
         >
           <LogOut className="size-4 text-zinc-500" strokeWidth={1.75} />

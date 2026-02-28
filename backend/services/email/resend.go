@@ -147,7 +147,7 @@ func SendTeamInvitation(to, teamName, inviterName, token string) error {
 </div>`, inviterName, teamName, acceptURL)
 
 	payload := resendPayload{
-		From:    "Costrace <team@issueiq.dev>",
+		From:    "Costrace <team@costrace.dev>",
 		To:      []string{to},
 		Subject: fmt.Sprintf("%s invited you to join %s on Costrace", inviterName, teamName),
 		HTML:    html,

@@ -7,7 +7,7 @@ const features = [
     title: "Real-time Cost Tracking",
     description:
       "Track every API call across OpenAI, Anthropic, and Gemini. See costs broken down by model, team, and project with zero configuration.",
-    metric: "$12.4K",
+    metric: "$1.4K",
     metricLabel: "tracked this month",
   },
   {
@@ -23,7 +23,7 @@ const features = [
     title: "Geographic Insights",
     description:
       "See where your API calls originate. Understand geographic distribution patterns and optimize for latency and compliance.",
-    metric: "14",
+    metric: "4",
     metricLabel: "regions tracked",
   },
 ];

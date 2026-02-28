@@ -1,12 +1,12 @@
 package billing
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/ikotun-dev/costrace/models"
@@ -34,22 +34,32 @@ type polarWebhookPayload struct {
 }
 
 // verifyWebhookSignature validates the Polar webhook signature using Standard Webhooks
-func (h *BillingHandler) verifyWebhookSignature(body []byte, headers http.Header) error {
+func (h *BillingHandler) verifyWebhookSignature(body []byte, r *http.Request) error {
 	if h.webhookSecret == "" {
 		log.Printf("WARNING: POLAR_WEBHOOK_SECRET not set - skipping signature verification")
 		return nil
 	}
 
-	// Strip the polar_whs_ prefix if present
+	// The secret from Polar comes as "polar_whs_<base64>" or just the base64 part
+	// We need to strip the prefix and then base64 encode it
 	secret := h.webhookSecret
-	if strings.HasPrefix(secret, "polar_whs_") {
-		secret = strings.TrimPrefix(secret, "polar_whs_")
+	if len(secret) > 11 && secret[:11] == "polar_whs_" {
+		secret = secret[11:] // Strip "polar_whs_" prefix
 	}
 
-	wh, err := standardwebhooks.NewWebhook(secret)
+	// Now base64 encode the cleaned secret
+	base64Secret := base64.StdEncoding.EncodeToString([]byte(secret))
+
+	wh, err := standardwebhooks.NewWebhook(base64Secret)
 	if err != nil {
 		return err
 	}
+
+	// Extract the required headers
+	headers := http.Header{}
+	headers.Set("webhook-id", r.Header.Get("webhook-id"))
+	headers.Set("webhook-timestamp", r.Header.Get("webhook-timestamp"))
+	headers.Set("webhook-signature", r.Header.Get("webhook-signature"))
 
 	return wh.Verify(body, headers)
 }
@@ -63,7 +73,7 @@ func (h *BillingHandler) HandlePolarWebhook(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Verify webhook signature using Standard Webhooks
-	if err := h.verifyWebhookSignature(body, r.Header); err != nil {
+	if err := h.verifyWebhookSignature(body, r); err != nil {
 		log.Printf("Invalid webhook signature: %v", err)
 		shared.RespondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid signature"})
 		return

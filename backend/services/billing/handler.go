@@ -1,9 +1,14 @@
 package billing
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/ikotun-dev/costrace/models"
@@ -12,30 +17,59 @@ import (
 )
 
 type BillingHandler struct {
-	db *gorm.DB
+	db            *gorm.DB
+	webhookSecret string
 }
 
 func NewBillingHandler(db *gorm.DB) *BillingHandler {
-	return &BillingHandler{db: db}
+	return &BillingHandler{
+		db:            db,
+		webhookSecret: os.Getenv("POLAR_WEBHOOK_SECRET"),
+	}
 }
 
 // Polar webhook payload structure
 type polarWebhookPayload struct {
-	Type string                 `json:"type"`
-	Data map[string]interface{} `json:"data"`
+	Type string         `json:"type"`
+	Data map[string]any `json:"data"`
 }
 
-// HandlePolarWebhook receives Polar webhook events directly from Polar
-// and updates the user's plan and polar_customer_id accordingly.
+// verifyWebhookSignature validates the Polar webhook signature
+func (h *BillingHandler) verifyWebhookSignature(body []byte, signature string) bool {
+	if h.webhookSecret == "" {
+		log.Printf("WARNING: POLAR_WEBHOOK_SECRET not set - skipping signature verification")
+		return true
+	}
+
+	mac := hmac.New(sha256.New, []byte(h.webhookSecret))
+	mac.Write(body)
+	expectedMAC := hex.EncodeToString(mac.Sum(nil))
+
+	return hmac.Equal([]byte(signature), []byte(expectedMAC))
+}
+
 func (h *BillingHandler) HandlePolarWebhook(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Failed to read request body: %v", err)
+		shared.RespondJSON(w, http.StatusBadRequest, map[string]string{"error": "Cannot read body"})
+		return
+	}
+
+	// Verify webhook signature
+	signature := r.Header.Get("X-Polar-Webhook-Signature")
+	if !h.verifyWebhookSignature(body, signature) {
+		log.Printf("Invalid webhook signature")
+		shared.RespondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid signature"})
+		return
+	}
+
 	var payload polarWebhookPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	if err := json.Unmarshal(body, &payload); err != nil {
 		log.Printf("Failed to decode webhook payload: %v", err)
 		shared.RespondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
 		return
 	}
-
-	log.Printf("Received Polar webhook: type=%s", payload.Type)
 
 	var email string
 	var customerID string

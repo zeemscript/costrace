@@ -14,14 +14,14 @@ const columns = [
     links: [
       { label: "Documentation", href: "https://docs.costrace.dev" },
       { label: "GitHub", href: "https://github.com/ikotun-dev/costrace" },
-      { label: "Support", href: "#" },
+      { label: "Support", href: "/support" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
     ],
   },
 ];

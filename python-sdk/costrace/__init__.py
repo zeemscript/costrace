@@ -1,14 +1,14 @@
-from typing import Callable
+from typing import Callable, Optional
 from .pricing import calculate_cost
 from .tracker import configure, create_trace, send_trace
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 
 __all__ = ["init", "calculate_cost"]
 
 
-def init(api_key: str, endpoint: str | None = None):
+def init(api_key: str, endpoint: Optional[str] = None):
     configure(api_key=api_key, endpoint=endpoint)
 
     try:

@@ -1,16 +1,30 @@
-from typing import Dict
+from typing import Dict, List, Optional
+import atexit
 import logging
 import threading
 import requests
 
 logger = logging.getLogger("costrace")
 
-_api_key: str | None = None
+_api_key: Optional[str] = None
 _endpoint = "https://api.costrace.dev/v1/traces"
 _enabled: bool = True
+_pending_threads: List[threading.Thread] = []
+_lock = threading.Lock()
 
 
-def configure(api_key: str, endpoint: str | None = None):
+def _flush():
+    with _lock:
+        threads = list(_pending_threads)
+        _pending_threads.clear()
+    for t in threads:
+        t.join(timeout=10)
+
+
+atexit.register(_flush)
+
+
+def configure(api_key: str, endpoint: Optional[str] = None):
 
     # api_key: Your Costrace API key
     # endpoint: Optional custom backend endpoint
@@ -42,8 +56,10 @@ def send_trace(data: Dict) -> bool:
     if not _enabled or not _api_key:
         return False
 
-    t = threading.Thread(target=_do_send, args=(data, _api_key, _endpoint), daemon=True)
+    t = threading.Thread(target=_do_send, args=(data, _api_key, _endpoint))
     t.start()
+    with _lock:
+        _pending_threads.append(t)
     return True
 
 
@@ -56,7 +72,7 @@ def create_trace(
     latency_ms: int,
     cost_usd: float,
     status: str = "success",
-    error: str | None = None,
+    error: Optional[str] = None,
 ) -> dict:
 
     trace = {

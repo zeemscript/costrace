@@ -2,8 +2,6 @@ package traces
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"net/netip"
@@ -31,9 +29,6 @@ func NewTraceHandler(db *gorm.DB, hub *sse.Hub) *TraceHandler {
 }
 
 func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
-	// apiKey := shared.GetAPIKey(r.Context())
-
-	log.Printf("CREATE TRACE function called")
 	var traceData struct {
 		APIKey    string  `json:"api_key"`
 		Provider  string  `json:"provider"`
@@ -49,12 +44,11 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&traceData); err != nil {
 		shared.RespondJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "Invalid JSON: " + err.Error(),
+			"error": "Invalid JSON",
 		})
 		return
 	}
 
-	// Validate the API key exists
 	var apiKeyRecord models.APIKey
 	if err := h.db.Where("key = ?", traceData.APIKey).First(&apiKeyRecord).Error; err != nil {
 		shared.RespondJSON(w, http.StatusUnauthorized, map[string]string{
@@ -63,16 +57,9 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the real IP address
 	ip := getRealIP(r)
+	country, _ := getCountry(ip)
 
-	//https://ipapi.co/{ip}/country/
-	country, err := getCountry(ip)
-	if err != nil {
-		log.Printf("Failed to get country for IP %s: %v", ip, err)
-	}
-
-	// Create trace
 	trace := models.Trace{
 		APIKey:    traceData.APIKey,
 		Provider:  traceData.Provider,
@@ -84,26 +71,20 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 		Status:    traceData.Status,
 		Error:     traceData.Error,
 		Country:   country,
-		// Timestamp: time.Unix(int64(traceData.Timestamp), 0),
 	}
 
 	if err := h.db.Create(&trace).Error; err != nil {
-		log.Printf("Failed to insert trace: %v", err)
 		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{
-			"error": "DB error",
+			"error": "Failed to store trace",
 		})
 		return
 	}
 
 	go budgetalerts.CheckBudgetAlerts(h.db, &trace)
 
-	// Broadcast to SSE clients
 	if h.hub != nil {
 		h.hub.Broadcast(trace.APIKey, trace)
 	}
-
-	log.Printf("✅ Stored trace: %s | %s | %d tokens | $%.6f",
-		trace.Provider, trace.Model, trace.TokensIn+trace.TokensOut, trace.CostUSD)
 
 	shared.RespondJSON(w, http.StatusAccepted, map[string]string{
 		"status": "ok",
@@ -119,8 +100,6 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get workspace context from query params
-	// If team_id=0 or not provided, use personal workspace
 	var teamID *uint
 	if teamIDStr := r.URL.Query().Get("team_id"); teamIDStr != "" {
 		if tid, err := strconv.ParseUint(teamIDStr, 10, 64); err == nil && tid > 0 {
@@ -129,7 +108,6 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Get all API key strings visible to this user for the selected workspace
 	keys, err := shared.GetScopedKeys(h.db, user, teamID)
 	if err != nil {
 		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{
@@ -139,7 +117,7 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(keys) == 0 {
-		shared.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		shared.RespondJSON(w, http.StatusOK, map[string]any{
 			"data": []models.Trace{}, "total": 0, "page": 1, "per_page": 50,
 		})
 		return
@@ -147,7 +125,6 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 
 	query := h.db.Where("api_key IN ?", keys)
 
-	// Optional filters
 	if apiKey := r.URL.Query().Get("api_key"); apiKey != "" {
 		query = query.Where("api_key = ?", apiKey)
 	}
@@ -164,11 +141,9 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 		query = query.Where("created_at >= to_timestamp(?::bigint)", from)
 	}
 
-	// Count total matching rows
 	var total int64
 	query.Model(&models.Trace{}).Count(&total)
 
-	// Pagination
 	page := 1
 	perPage := 50
 	if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
@@ -196,37 +171,21 @@ func (h *TraceHandler) ListTraces(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRealIP(r *http.Request) string {
-	// 1. Check X-Forwarded-For (can be a comma-separated list)
-	xForwardedFor := r.Header.Get("X-Forwarded-For")
-	if xForwardedFor != "" {
-		ips := strings.Split(xForwardedFor, ",")
-		ip := strings.TrimSpace(ips[0])
-		log.Printf("IP from X-Forwarded-For: %s", ip)
-		return ip
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		return strings.TrimSpace(strings.Split(xff, ",")[0])
 	}
-
-	xRealIP := r.Header.Get("X-Real-Ip")
-	if xRealIP != "" {
-		log.Printf("IP from X-Real-Ip: %s", xRealIP)
-		return xRealIP
+	if xri := r.Header.Get("X-Real-Ip"); xri != "" {
+		return xri
 	}
-
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		// If SplitHostPort fails, the RemoteAddr might not have a port
-		log.Printf("IP from RemoteAddr (no port): %s", r.RemoteAddr)
 		return r.RemoteAddr
 	}
-	log.Printf("IP from RemoteAddr: %s", ip)
 	return ip
 }
 
 func getCountry(ip string) (string, error) {
-	log.Printf("IP address: %s", ip)
-
-	// Handle localhost/loopback addresses
 	if ip == "127.0.0.1" || ip == "::1" || ip == "localhost" {
-		log.Printf("Localhost IP detected, returning 'Local'")
 		return "Local", nil
 	}
 
@@ -235,20 +194,20 @@ func getCountry(ip string) (string, error) {
 		return "", err
 	}
 	defer db.Close()
+
 	addr, err := netip.ParseAddr(ip)
 	if err != nil {
 		return "", err
 	}
+
 	record, err := db.City(addr)
 	if err != nil {
 		return "", err
 	}
+
 	if !record.HasData() {
-		fmt.Println("No data found for this IP")
 		return "", nil
 	}
-	if record.Location.HasCoordinates() {
-		fmt.Printf("Coordinates: %v, %v\n", *record.Location.Latitude, *record.Location.Longitude)
-	}
+
 	return record.Country.Names.English, nil
 }

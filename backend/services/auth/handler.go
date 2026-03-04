@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -51,7 +50,6 @@ func (h *AuthHandler) GitHubLogin(w http.ResponseWriter, r *http.Request) {
 	state := generateState()
 	h.stateStore[state] = time.Now().Add(10 * time.Minute)
 
-	// Clean up expired states
 	go h.cleanupExpiredStates()
 
 	url := h.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOnline)
@@ -63,7 +61,6 @@ func (h *AuthHandler) GitHubCallback(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	code := r.URL.Query().Get("code")
 
-	// Validate state
 	if _, exists := h.stateStore[state]; !exists {
 		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
 		return
@@ -75,39 +72,36 @@ func (h *AuthHandler) GitHubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Exchange code for token
 	token, err := h.oauthConfig.Exchange(context.Background(), code)
 	if err != nil {
-		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to exchange token", http.StatusInternalServerError)
 		return
 	}
 
-	// Get user info from GitHub
 	client := h.oauthConfig.Client(context.Background(), token)
 	resp, err := client.Get("https://api.github.com/user")
 	if err != nil {
-		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to get user info", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
 	var githubUser types.GitHubUser
 	if err := json.NewDecoder(resp.Body).Decode(&githubUser); err != nil {
-		http.Error(w, "Failed to decode user info: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to decode user info", http.StatusInternalServerError)
 		return
 	}
-
-	//going to get the country of the user from the ip
 
 	userIP := r.Header.Get("X-Forwarded-For")
 	if userIP == "" {
 		userIP = r.RemoteAddr
 	}
 
-	resp, _ = http.Get("https://ipapi.co/" + userIP + "/json/")
-	log.Printf("Result from ipapii.co : ", resp)
-
-	githubUser.Country = resp.Header.Get("country_name")
+	geoResp, err := http.Get("https://ipapi.co/" + userIP + "/json/")
+	if err == nil && geoResp != nil {
+		defer geoResp.Body.Close()
+		githubUser.Country = geoResp.Header.Get("country_name")
+	}
 
 	if githubUser.Email == "" {
 		emailResp, err := client.Get("https://api.github.com/user/emails")
@@ -130,19 +124,19 @@ func (h *AuthHandler) GitHubCallback(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.findOrCreateUser(githubUser)
 	if err != nil {
-		http.Error(w, "Failed to create user: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
 	jwtToken, err := h.generateJWT(user)
 	if err != nil {
-		http.Error(w, "Failed to generate token: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
 
 	userJSON, err := json.Marshal(user)
 	if err != nil {
-		http.Error(w, "Failed to encode user: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to encode user", http.StatusInternalServerError)
 		return
 	}
 
@@ -159,7 +153,6 @@ func (h *AuthHandler) GitHubCallback(w http.ResponseWriter, r *http.Request) {
 		url.QueryEscape(encoded),
 	)
 
-	log.Printf("redirecting user to frontend: %s", user.Username)
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
@@ -174,14 +167,12 @@ func (h *AuthHandler) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If the email belongs to a GitHub user, direct them to sign in with GitHub instead
 	existingUser := h.findUserByEmail(req.Email)
 	if existingUser != nil && existingUser.AuthType == models.Github {
 		shared.RespondJSON(w, http.StatusForbidden, map[string]string{"error": "This email is linked to a GitHub account. Please sign in with GitHub."})
 		return
 	}
 
-	// Invalidate any existing unused tokens for this email
 	h.db.Where("email = ? AND used = false", req.Email).Delete(&models.MagicLinkTokens{})
 
 	token := generateToken()
@@ -203,14 +194,9 @@ func (h *AuthHandler) RequestMagicLink(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) findOrCreateUser(githubUser types.GitHubUser) (*models.User, error) {
 	var user models.User
 	githubIDStr := fmt.Sprintf("%d", githubUser.ID)
-
-	// Try to find existing user by GitHub ID
 	result := h.db.Where("github_id = ?", githubIDStr).First(&user)
 
-	// log.Printf("github id result : ", result)
-
 	if result.Error == gorm.ErrRecordNotFound {
-		// Create new user
 		user = models.User{
 			Email:     githubUser.Email,
 			GithubID:  &githubIDStr,
@@ -226,14 +212,11 @@ func (h *AuthHandler) findOrCreateUser(githubUser types.GitHubUser) (*models.Use
 	} else if result.Error != nil {
 		return nil, result.Error
 	} else {
-		// Update existing user info
-		// user.Email = githubUser.Email
 		user.Username = githubUser.Login
 		user.AvatarURL = githubUser.AvatarURL
 		h.db.Save(&user)
 	}
 
-	// Preload teams so the frontend gets the full list on login
 	h.db.Preload("Teams").First(&user, user.ID)
 
 	return &user, nil
@@ -269,7 +252,6 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Preload the user's teams via the many-to-many association
 	if err := h.db.Preload("Teams").First(&user, user.ID).Error; err != nil {
 		shared.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to load user teams"})
 		return
@@ -278,7 +260,7 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	shared.RespondJSON(w, http.StatusOK, user)
 }
 
-// UpdateUser updates the authenticated user's profile (currently just email since git doesn't return the email).
+// UpdateUser updates the authenticated user's profile.
 func (h *AuthHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	user, ok := shared.GetUserFromContext(r.Context())
 	if !ok {
@@ -327,7 +309,6 @@ func (h *AuthHandler) VerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mark token as used immediately to prevent replay
 	h.db.Model(&magicLink).Update("used", true)
 
 	user, err := h.findOrCreateEmailUser(magicLink.Email)
@@ -361,7 +342,6 @@ func (h *AuthHandler) VerifyMagicLink(w http.ResponseWriter, r *http.Request) {
 		url.QueryEscape(encoded),
 	)
 
-	log.Printf("magic link login: %s", user.Email)
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
@@ -375,7 +355,6 @@ func (h *AuthHandler) findOrCreateEmailUser(emailAddr string) (*models.User, err
 		return nil, err
 	}
 
-	// Derive a username from the email (part before @)
 	username := emailAddr
 	if i := strings.IndexByte(emailAddr, '@'); i > 0 {
 		username = emailAddr[:i]

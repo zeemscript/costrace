@@ -14,7 +14,7 @@ ANTHROPIC_PRICING = {
     "claude-sonnet-4-20250514": {"input": 3.00, "output": 15.00},
     "claude-3-7-sonnet-20250219": {"input": 3.00, "output": 15.00},
     "claude-opus-4-20250514": {"input": 15.00, "output": 75.00},
-    "claude-3-haiku-20240307": {"input": 0.25, "output": 1.25}
+    "claude-3-haiku-20240307": {"input": 0.25, "output": 1.25},
 }
 
 GEMINI_PRICING = {
@@ -60,8 +60,3 @@ def calculate_cost(provider: str, model: str, tokens_in: int, tokens_out: int) -
     output_cost = (tokens_out / 1_000_000) * pricing["output"]
 
     return round(input_cost + output_cost, 6)
-
-
-if __name__ == "__main__":
-    cost = calculate_cost("openai", "gpt-4o", 1000, 500)
-    print(f"Test cost: ${cost}")

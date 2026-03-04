@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,7 +26,6 @@ import (
 func main() {
 	godotenv.Load("../.env")
 
-	// Database configuration
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
 		dbUrl = "postgresql://postgres@localhost:5432/costrace"
@@ -38,13 +38,11 @@ func main() {
 		githubRedirectURL = "http://localhost:8080/auth/github/callback"
 	}
 
-	// JWT configuration
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "SecretKey2190"
+		log.Fatal("JWT_SECRET must be set")
 	}
 
-	// Validate required environment variables
 	if githubClientID == "" || githubClientSecret == "" {
 		log.Fatal("GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set")
 	}
@@ -58,8 +56,12 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowedOrigins == "" {
+		allowedOrigins = "http://localhost:3000"
+	}
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   strings.Split(allowedOrigins, ","),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
@@ -86,20 +88,15 @@ func main() {
 		JWTSecret:          []byte(jwtSecret),
 	})
 
-	// Public routes
 	r.Get("/auth/github", authHandler.GitHubLogin)
 	r.Get("/auth/github/callback", authHandler.GitHubCallback)
 	r.Post("/auth/magic-link", authHandler.RequestMagicLink)
 	r.Get("/auth/magic-link/verify", authHandler.VerifyMagicLink)
 
 	r.Route("/v1", func(r chi.Router) {
-		// Webhook route — called server-to-server from Next.js, no JWT
 		r.Post("/webhooks/polar", billingHandler.HandlePolarWebhook)
-
-		// SDK route — authenticated via API key in the request body, not JWT
 		r.Post("/traces", traceHandler.CreateTrace)
 
-		// Dashboard routes — authenticated via JWT
 		r.Group(func(r chi.Router) {
 			r.Use(shared.AuthMiddleware(db, []byte(jwtSecret)))
 			r.Get("/events", sseHandler.StreamEvents)
@@ -118,7 +115,6 @@ func main() {
 			r.Put("/budget-alerts/{id}", budgetAlertHandler.UpdateBudgetAlert)
 			r.Delete("/budget-alerts/{id}", budgetAlertHandler.DeleteBudgetAlert)
 
-			// Team routes
 			r.Post("/teams", teamHandler.CreateTeam)
 			r.Get("/teams/current", teamHandler.GetCurrentTeam)
 			r.Put("/teams", teamHandler.UpdateTeam)

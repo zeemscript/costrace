@@ -1,6 +1,9 @@
 from typing import Dict
+import logging
 import threading
 import requests
+
+logger = logging.getLogger("costrace")
 
 _api_key: str | None = None
 _endpoint = "https://api.costrace.dev/v1/traces"
@@ -29,9 +32,9 @@ def _do_send(data: Dict, api_key: str, endpoint: str):
             timeout=5,
         )
         if response.status_code not in range(200, 300):
-            print(f"[Costrace] Error response: {response.text}")
+            logger.warning("Error response: %s", response.text)
     except Exception as e:
-        print(f"[Costrace] Failed to send trace: {e}")
+        logger.warning("Failed to send trace: %s", e)
 
 
 def send_trace(data: Dict) -> bool:

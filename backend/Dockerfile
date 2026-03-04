@@ -1,32 +1,32 @@
-# =======================
-# 1) Build Stage
-# =======================
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /costrace
 
-# Install git (needed for go mod download from private repos)
 RUN apk add --no-cache git
 
-# Download dependencies early (better caching)
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the project
 COPY . .
-
-# Build the Go binary
-# RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o costrace .
 RUN go build -o costrace .
 
 FROM alpine:3.20
 
 WORKDIR /costrace
 
-# Copy binary from builder
-COPY --from=builder /costrace .
+RUN apk add --no-cache curl
+
+ARG MAXMIND_LICENSE_KEY
+RUN if [ -n "$MAXMIND_LICENSE_KEY" ]; then \
+      curl -sSL "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${MAXMIND_LICENSE_KEY}&suffix=tar.gz" \
+        -o /tmp/geolite2.tar.gz && \
+      tar -xzf /tmp/geolite2.tar.gz -C /tmp && \
+      cp /tmp/GeoLite2-City_*/GeoLite2-City.mmdb . && \
+      rm -rf /tmp/geolite2.tar.gz /tmp/GeoLite2-City_*; \
+    fi
+
+COPY --from=builder /costrace/costrace .
 
 EXPOSE 8081
 
-# Run the API
 CMD ["./costrace"]

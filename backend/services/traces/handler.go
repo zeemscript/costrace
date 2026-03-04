@@ -2,6 +2,7 @@ package traces
 
 import (
 	"encoding/json"
+	"log"
 	"net"
 	"net/http"
 	"net/netip"
@@ -191,6 +192,7 @@ func getCountry(ip string) (string, error) {
 
 	db, err := geoip2.Open("GeoLite2-City.mmdb")
 	if err != nil {
+		log.Printf("Error opening geolite : %v", err.Error())
 		return "", err
 	}
 	defer db.Close()

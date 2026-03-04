@@ -3,7 +3,6 @@ package sse
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -40,19 +39,21 @@ func (h *SSEHandler) StreamEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keys, err := shared.GetScopedKeys(h.db, user, teamID)
-	if err != nil || len(keys) == 0 {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err != nil {
+		http.Error(w, "Failed to fetch API keys", http.StatusInternalServerError)
+		return
+	}
+	if len(keys) == 0 {
+		http.Error(w, "No API keys found", http.StatusOK)
 		return
 	}
 
 	const maxSSEConnsPerUser = 5
 	if h.hub.ConnectionCount(keys) >= maxSSEConnsPerUser {
-		log.Printf("User %s reached max connections", user.ID)
 		http.Error(w, "Max connections reached", http.StatusTooManyRequests)
 		return
 	}
 
-	//check if streaming is supported
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming not supported", http.StatusInternalServerError)

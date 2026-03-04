@@ -1,6 +1,6 @@
 "use client";
 
-import { getCurrentUser } from "@/api/user";
+import { getCurrentUser, updateUser } from "@/api/user";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useUserStore } from "@/stores/user-store";
 import { PolarEmbedCheckout } from "@polar-sh/checkout/embed";

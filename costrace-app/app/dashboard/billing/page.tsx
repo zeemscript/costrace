@@ -113,6 +113,9 @@ export default function BillingPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
   const { user, token, setAuth } = useUserStore();
   const searchParams = useSearchParams();
   const currentPlan = user?.plan || "free";
@@ -202,6 +205,11 @@ export default function BillingPage() {
   async function handleCheckout(planId: string) {
     if (planId === "free" || planId === currentPlan) return;
 
+    if (!user?.email) {
+      setShowEmailDialog(true);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch("/api/checkout", {
@@ -289,6 +297,24 @@ export default function BillingPage() {
       toast.error("Failed to resume subscription");
     } finally {
       setResuming(false);
+    }
+  }
+
+  async function handleSaveEmailAndCheckout() {
+    if (!emailInput.trim()) return;
+    setSavingEmail(true);
+    try {
+      const { data } = await updateUser({ email: emailInput.trim() });
+      if (token) setAuth(data, token);
+      setShowEmailDialog(false);
+      setEmailInput("");
+      toast.success("Email saved");
+      // Continue to checkout with the new email
+      handleCheckout("premium");
+    } catch {
+      toast.error("Failed to save email");
+    } finally {
+      setSavingEmail(false);
     }
   }
 
@@ -553,6 +579,40 @@ export default function BillingPage() {
               className="bg-red-600 hover:bg-red-700"
             >
               Yes, Cancel Subscription
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Email Required Dialog */}
+      <AlertDialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Email required</AlertDialogTitle>
+            <AlertDialogDescription>
+              An email address is needed for billing. You can update it later in
+              Settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Input
+              type="email"
+              className="rounded-xs"
+              placeholder="you@company.com"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && handleSaveEmailAndCheckout()
+              }
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSaveEmailAndCheckout}
+              disabled={savingEmail || !emailInput.trim()}
+            >
+              {savingEmail ? "Saving..." : "Save & Continue"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

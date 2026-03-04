@@ -17,16 +17,16 @@ const (
 
 type User struct {
 	ID    uint   `gorm:"primaryKey" json:"id"`
-	Email string `gorm:"uniqueIndex;not null" json:"email"`
+	Email string `json:"email"`
 
 	// GitHub OAuth fields
-	GithubID        *string  `gorm:"uniqueIndex" json:"github_id"`
-	Username        string   `json:"username"`
-	AvatarURL       string   `json:"avatar_url"`
-	Teams           []Team   `gorm:"many2many:user_teams;" json:"teams"`
-	AuthType        AuthType `gorm:"not null;default:'github'" json:"auth_type"`
-	CreatedAt       int64    `gorm:"autoCreateTime" json:"created_at"`
-	Country         string   `gorm:"index" json:"country"`
+	GithubID            *string    `gorm:"uniqueIndex" json:"github_id"`
+	Username            string     `json:"username"`
+	AvatarURL           string     `json:"avatar_url"`
+	Teams               []Team     `gorm:"many2many:user_teams;" json:"teams"`
+	AuthType            AuthType   `gorm:"not null;default:'github'" json:"auth_type"`
+	CreatedAt           int64      `gorm:"autoCreateTime" json:"created_at"`
+	Country             string     `gorm:"index" json:"country"`
 	Plan                PlanType   `gorm:"not null;default:'free'" json:"plan"`
 	PolarCustomerID     string     `json:"polar_customer_id"`
 	PolarSubscriptionID string     `json:"polar_subscription_id"`

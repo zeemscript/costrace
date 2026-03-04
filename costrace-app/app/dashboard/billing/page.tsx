@@ -171,9 +171,7 @@ export default function BillingPage() {
     // Timeout after 30s
     timeoutId = setTimeout(() => {
       if (intervalId) clearInterval(intervalId);
-      toast.info(
-        "Still processing your payment. Please refresh in a moment.",
-      );
+      toast.info("Still processing your payment. Please refresh in a moment.");
     }, 30000);
 
     return () => {
@@ -257,9 +255,7 @@ export default function BillingPage() {
 
       if (!res.ok) throw new Error("Cancel failed");
 
-      toast.success(
-        "Subscription set to cancel at end of billing period",
-      );
+      toast.success("Subscription set to cancel at end of billing period");
       await refreshUser();
       fetchOrders();
     } catch (error) {
@@ -411,7 +407,9 @@ export default function BillingPage() {
                         ? "Loading..."
                         : isCurrent
                           ? "Current plan"
-                          : plan.cta}
+                          : isUpgrade
+                            ? plan.cta
+                            : "Free plan"}
                     </Button>
                   </div>
                 </div>

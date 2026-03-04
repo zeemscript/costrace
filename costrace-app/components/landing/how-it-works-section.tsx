@@ -71,18 +71,18 @@ export function HowItWorksSection() {
                   </div>
 
                   {/* Right: code block */}
-                  <div className="relative ml-12 md:ml-0">
+                  <div className="relative ml-0 md:ml-0">
                     {/* Corner ticks */}
                     <span className="absolute left-0 top-[-6px] h-[calc(100%+12px)] w-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
                     <span className="absolute right-0 top-[-6px] h-[calc(100%+12px)] w-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
                     <span className="absolute top-0 left-[-6px] w-[calc(100%+12px)] h-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
                     <span className="absolute bottom-0 left-[-6px] w-[calc(100%+12px)] h-px bg-white/[0.06] transition-colors duration-500 group-hover:bg-emerald-500/15" />
 
-                    <div className="flex items-center justify-between bg-white/[0.02] px-5 py-4">
-                      <code className="font-mono text-[13px] text-white/60 transition-colors duration-500 group-hover:text-emerald-400/90">
+                    <div className="flex items-center justify-between gap-3 overflow-x-auto bg-white/[0.02] px-4 py-4 sm:px-5">
+                      <code className="whitespace-nowrap font-mono text-[13px] text-white/60 transition-colors duration-500 group-hover:text-emerald-400/90">
                         {step.code}
                       </code>
-                      <span className="font-mono text-[9px] uppercase tracking-wider text-white/50">
+                      <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-white/50">
                         {step.lang}
                       </span>
                     </div>

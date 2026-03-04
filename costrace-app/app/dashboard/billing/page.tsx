@@ -436,14 +436,20 @@ export default function BillingPage() {
                   </p>
                 </div>
               ) : (
-                <div className="rounded-xs border">
+                <div className="overflow-x-auto rounded-xs border">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b text-left text-xs text-muted-foreground">
-                        <th className="px-4 py-2.5 font-medium">Date</th>
-                        <th className="px-4 py-2.5 font-medium">Description</th>
-                        <th className="px-4 py-2.5 font-medium">Amount</th>
-                        <th className="px-4 py-2.5 font-medium text-right">
+                        <th className="px-3 py-2.5 font-medium sm:px-4">
+                          Date
+                        </th>
+                        <th className="px-3 py-2.5 font-medium sm:px-4">
+                          Description
+                        </th>
+                        <th className="px-3 py-2.5 font-medium sm:px-4">
+                          Amount
+                        </th>
+                        <th className="px-3 py-2.5 font-medium text-right sm:px-4">
                           Status
                         </th>
                       </tr>
@@ -451,10 +457,10 @@ export default function BillingPage() {
                     <tbody>
                       {orders.map((order) => (
                         <tr key={order.id} className="border-b last:border-0">
-                          <td className="px-4 py-3 text-xs">
+                          <td className="whitespace-nowrap px-3 py-3 text-xs sm:px-4">
                             {formatDate(order.created_at)}
                           </td>
-                          <td className="px-4 py-3 text-xs">
+                          <td className="px-3 py-3 text-xs sm:px-4">
                             <span className="text-foreground">
                               {order.product_name}
                             </span>
@@ -463,10 +469,10 @@ export default function BillingPage() {
                               {billingReasonLabel(order.billing_reason)}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-xs">
+                          <td className="whitespace-nowrap px-3 py-3 text-xs sm:px-4">
                             {formatCurrency(order.amount, order.currency)}
                           </td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-3 py-3 text-right sm:px-4">
                             <span
                               className={`inline-block rounded-xs px-2 py-0.5 text-[11px] font-medium ${
                                 order.status === "paid"
@@ -497,7 +503,7 @@ export default function BillingPage() {
                 Canceling will let you keep Pro features until the end of your
                 billing period.
               </p>
-              <div className="mt-4 flex items-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"

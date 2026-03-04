@@ -82,10 +82,10 @@ export function HeroSection() {
 
           {/* Frame with extending lines */}
           <div className="relative">
-            <span className="absolute left-0 top-[-40px] bottom-[-40px] w-px bg-emerald-950" />
-            <span className="absolute right-0 top-[-40px] bottom-[-40px] w-px bg-emerald-950" />
-            <span className="absolute top-0 left-[-40px] right-[-40px] h-px bg-emerald-950" />
-            <span className="absolute bottom-0 left-[-40px] right-[-40px] h-px bg-emerald-950" />
+            <span className="absolute left-0 top-[-20px] bottom-[-20px] w-px bg-emerald-950 sm:top-[-40px] sm:bottom-[-40px]" />
+            <span className="absolute right-0 top-[-20px] bottom-[-20px] w-px bg-emerald-950 sm:top-[-40px] sm:bottom-[-40px]" />
+            <span className="absolute top-0 left-[-6px] right-[-6px] h-px bg-emerald-950 sm:left-[-40px] sm:right-[-40px]" />
+            <span className="absolute bottom-0 left-[-6px] right-[-6px] h-px bg-emerald-950 sm:left-[-40px] sm:right-[-40px]" />
 
             {/* Top-left */}
             <span className="absolute top-[-3px] left-[-3px] size-[7px] border border-emerald-500/20 bg-background" />

@@ -450,14 +450,14 @@ export function SdkShowcaseSection() {
 
           <div className="relative bg-white/[0.01]">
             {/* Tab bar */}
-            <div className="flex items-center justify-between border-b border-white/[0.04]">
+            <div className="flex flex-wrap items-center justify-between gap-y-0 border-b border-white/[0.04]">
               {/* Language tabs */}
               <div className="flex">
                 {languages.map((lang) => (
                   <button
                     key={lang}
                     onClick={() => setActiveLang(lang)}
-                    className={`relative cursor-pointer px-5 py-3.5 font-mono text-[11px] uppercase tracking-wider transition-colors duration-300 ${
+                    className={`relative cursor-pointer px-4 py-3.5 font-mono text-[11px] uppercase tracking-wider transition-colors duration-300 sm:px-5 ${
                       activeLang === lang
                         ? "text-white/80"
                         : "text-white/50 hover:text-white/70"
@@ -477,7 +477,7 @@ export function SdkShowcaseSection() {
                   <button
                     key={provider}
                     onClick={() => setActiveProvider(provider)}
-                    className={`cursor-pointer px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-300 ${
+                    className={`cursor-pointer px-2 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-300 sm:px-3 ${
                       activeProvider === provider
                         ? "bg-emerald-500/10 text-emerald-400/70"
                         : "text-white/40 hover:text-white/60"
@@ -495,7 +495,7 @@ export function SdkShowcaseSection() {
             </pre>
 
             {/* Bottom status bar */}
-            <div className="flex items-center justify-between border-t border-white/[0.04] px-5 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-y-1 border-t border-white/[0.04] px-4 py-2.5 sm:px-5">
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
                   <span className="size-1.5 rounded-full bg-emerald-500/50" />
@@ -503,7 +503,7 @@ export function SdkShowcaseSection() {
                     auto-instrumented
                   </span>
                 </span>
-                <span className="font-mono text-[10px] text-white/30">
+                <span className="hidden font-mono text-[10px] text-white/30 sm:inline">
                   cost · latency · tokens
                 </span>
               </div>

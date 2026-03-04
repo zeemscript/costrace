@@ -89,21 +89,21 @@ export function PricingSection() {
           <span className="absolute top-0 left-[-12px] w-[calc(100%+24px)] h-px bg-white/[0.04]" />
           <span className="absolute bottom-0 left-[-12px] w-[calc(100%+24px)] h-px bg-white/[0.04]" />
 
-          <div className="relative bg-white/[0.01]">
+          <div className="relative overflow-x-auto bg-white/[0.01]">
             {/* Plan headers */}
             <div
-              className="grid border-b border-white/[0.04]"
+              className="grid min-w-[580px] border-b border-white/[0.04]"
               style={{
                 gridTemplateColumns: `1.4fr ${plans.map(() => "1fr").join(" ")}`,
               }}
             >
               {/* Empty top-left cell */}
-              <div className="p-6" />
+              <div className="p-4 sm:p-6" />
 
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`relative p-6 text-center ${
+                  className={`relative p-4 text-center sm:p-6 ${
                     plan.highlighted ? "bg-emerald-500/[0.03]" : ""
                   }`}
                 >
@@ -136,13 +136,13 @@ export function PricingSection() {
             {features.map((feature, i) => (
               <div
                 key={feature.name}
-                className="group grid border-b border-white/[0.03] transition-colors duration-300 hover:bg-white/[0.01]"
+                className="group grid min-w-[580px] border-b border-white/[0.03] transition-colors duration-300 hover:bg-white/[0.01]"
                 style={{
                   gridTemplateColumns: `1.4fr ${plans.map(() => "1fr").join(" ")}`,
                 }}
               >
                 {/* Feature name */}
-                <div className="flex items-center p-5">
+                <div className="flex items-center p-4 sm:p-5">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-[10px] text-white/30">
                       {String(i + 1).padStart(2, "0")}
@@ -163,7 +163,7 @@ export function PricingSection() {
                   return (
                     <div
                       key={plan.id}
-                      className={`flex items-center justify-center p-5 ${
+                      className={`flex items-center justify-center p-4 sm:p-5 ${
                         plan.highlighted ? "bg-emerald-500/[0.02]" : ""
                       }`}
                     >
@@ -188,16 +188,16 @@ export function PricingSection() {
 
             {/* CTA row */}
             <div
-              className="grid"
+              className="grid min-w-[580px]"
               style={{
                 gridTemplateColumns: `1.4fr ${plans.map(() => "1fr").join(" ")}`,
               }}
             >
-              <div className="p-6" />
+              <div className="p-4 sm:p-6" />
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`flex items-center justify-center p-6 ${
+                  className={`flex items-center justify-center p-4 sm:p-6 ${
                     plan.highlighted ? "bg-emerald-500/[0.02]" : ""
                   }`}
                 >

@@ -1,7 +1,6 @@
 # Costrace
 
 [![GitHub stars](https://img.shields.io/github/stars/ikotun-dev/costrace)](https://github.com/ikotun-dev/costrace/stargazers)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![npm](https://img.shields.io/npm/v/costrace)](https://www.npmjs.com/package/costrace)
 [![PyPI](https://img.shields.io/pypi/v/costrace-sdk)](https://pypi.org/project/costrace-sdk/)
 
@@ -35,12 +34,13 @@ cp .env.example .env
 
 ### 2. Backend
 
-Requires Go 1.25+ and PostgreSQL.
+Requires Go and PostgreSQL.
 
 ```bash
+make run backend
+OR
 cd backend
-go build -o costrace .
-./costracAPP-sdAPP-sdk
+go run .
 ```
 
 #### GeoIP (optional)

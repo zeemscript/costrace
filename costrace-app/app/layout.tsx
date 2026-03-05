@@ -14,24 +14,40 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "costrace",
-  description: "Track and monitor your LLM API costs",
+  title: "Costrace — LLM Cost, Token & Latency Tracking",
+  description:
+    "Open-source observability for LLM APIs. Track cost, token usage, and latency across OpenAI, Anthropic, and Google Gemini in real time — with zero code changes.",
+  keywords: [
+    "LLM",
+    "cost tracking",
+    "observability",
+    "OpenAI",
+    "Anthropic",
+    "Gemini",
+    "token usage",
+    "latency",
+    "API monitoring",
+  ],
   openGraph: {
-    title: "costrace",
-    description: "Track and monitor your LLM API costs",
+    type: "website",
+    siteName: "Costrace",
+    title: "Costrace — LLM Cost, Token & Latency Tracking",
+    description:
+      "Open-source observability for LLM APIs. Track cost, token usage, and latency across OpenAI, Anthropic, and Google Gemini in real time — with zero code changes.",
     images: [
       {
         url: "/desktop-dashboard.png",
         width: 1200,
         height: 630,
-        alt: "costrace dashboard",
+        alt: "Costrace dashboard showing LLM cost and latency analytics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "costrace",
-    description: "Track and monitor your LLM API costs",
+    title: "Costrace — LLM Cost, Token & Latency Tracking",
+    description:
+      "Open-source observability for LLM APIs. Track cost, token usage, and latency across OpenAI, Anthropic, and Google Gemini in real time — with zero code changes.",
     images: ["/desktop-dashboard.png"],
   },
 };

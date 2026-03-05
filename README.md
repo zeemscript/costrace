@@ -92,7 +92,7 @@ costrace.init("ct_your_api_key");
 #### Python
 
 ```bash
-pip install costrace
+pip install costrace-sdk[openai] //update this based on the provider you're using
 ```
 
 ```python

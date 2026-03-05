@@ -4,6 +4,8 @@ LLM cost and latency tracking for OpenAI, Anthropic, and Google Gemini.
 
 Costrace provides SDKs that automatically instrument your LLM calls via monkey-patching — no code changes required. A web dashboard gives you real-time analytics on spend, token usage, latency, and geographic distribution.
 
+You can view the docs [here](https://github.com/ikotun-dev/costrace-docs)
+
 ## Architecture
 
 ```

@@ -40,7 +40,7 @@ const features = [
   },
   {
     name: "Alert channels",
-    values: { free: "Email only", pro: "Email + Slack + Webhooks" },
+    values: { free: "Email only", pro: "Email + Slack(soon) + Webhooks(soon)" },
   },
   {
     name: "Providers tracked",

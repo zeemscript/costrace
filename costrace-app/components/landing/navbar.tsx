@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { Menu, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -13,11 +13,23 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [stars, setStars] = useState<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    fetch("https://api.github.com/repos/ikotun-dev/costrace")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.stargazers_count === "number") {
+          setStars(data.stargazers_count);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -70,6 +82,16 @@ export function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden items-center gap-5 md:flex">
+          <a
+            href="https://github.com/ikotun-dev/costrace"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-white/50 transition-colors duration-300 hover:text-white/70"
+          >
+            <Star className="size-3.5" />
+            {stars !== null ? stars.toLocaleString() : "GitHub"}
+          </a>
+
           <Link
             href="/auth"
             className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition-colors duration-300 hover:text-white/70"

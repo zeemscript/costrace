@@ -1,5 +1,10 @@
 # Costrace
 
+[![GitHub stars](https://img.shields.io/github/stars/ikotun-dev/costrace)](https://github.com/ikotun-dev/costrace/stargazers)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![npm](https://img.shields.io/npm/v/costrace)](https://www.npmjs.com/package/costrace)
+[![PyPI](https://img.shields.io/pypi/v/costrace-sdk)](https://pypi.org/project/costrace-sdk/)
+
 LLM cost and latency tracking for OpenAI, Anthropic, and Google Gemini.
 
 Costrace provides SDKs that automatically instrument your LLM calls via monkey-patching — no code changes required. A web dashboard gives you real-time analytics on spend, token usage, latency, and geographic distribution.

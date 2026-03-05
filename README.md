@@ -122,4 +122,4 @@ costrace.init(api_key="ct_your_api_key")
 
 ## License
 
-MIT
+MIT & AGPL

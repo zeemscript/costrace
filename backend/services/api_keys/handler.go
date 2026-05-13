@@ -2,11 +2,13 @@ package apikeys
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/ikotun-dev/costrace/models"
+	"github.com/ikotun-dev/costrace/services/audit"
 	"github.com/ikotun-dev/costrace/shared"
 	"gorm.io/gorm"
 )
@@ -102,6 +104,8 @@ func (h *ApiKeyHandler) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	go audit.LogAction(h.db, user.ID, body.TeamID, "create", "api_key", fmt.Sprintf("Created API key '%s'", body.Name), r)
+
 	shared.RespondJSON(w, http.StatusCreated, apiKey)
 }
 
@@ -132,6 +136,8 @@ func (h *ApiKeyHandler) DeleteAPIKey(w http.ResponseWriter, r *http.Request) {
 		shared.RespondJSON(w, http.StatusNotFound, map[string]string{"error": "API key not found"})
 		return
 	}
+
+	go audit.LogAction(h.db, user.ID, teamID, "delete", "api_key", fmt.Sprintf("Deleted API key ID %s", id), r)
 
 	shared.RespondJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }

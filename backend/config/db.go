@@ -42,6 +42,21 @@ func InitDB(dbUrl string) (*gorm.DB, error) {
 	if err := db.AutoMigrate(&models.MagicLinkTokens{}); err != nil {
 		log.Fatal("Failed to migrate magic_link_tokens model into database : ", err)
 	}
+	if err := db.AutoMigrate(&models.SecurityAlert{}); err != nil {
+		log.Fatal("Failed to migrate security_alert model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.AuditLog{}); err != nil {
+		log.Fatal("Failed to migrate audit_log model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.RateLimitRule{}); err != nil {
+		log.Fatal("Failed to migrate rate_limit_rule model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.AbuseEvent{}); err != nil {
+		log.Fatal("Failed to migrate abuse_event model into database : ", err)
+	}
+	if err := db.AutoMigrate(&models.IPAllowlist{}); err != nil {
+		log.Fatal("Failed to migrate ip_allowlist model into database : ", err)
+	}
 
 	log.Print("Database connected & migration completed successfully")
 	return db, nil

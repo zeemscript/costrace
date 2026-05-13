@@ -11,6 +11,9 @@ import (
 
 	"github.com/ikotun-dev/costrace/models"
 	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
+	"github.com/ikotun-dev/costrace/services/ipallowlist"
+	"github.com/ikotun-dev/costrace/services/ratelimit"
+	"github.com/ikotun-dev/costrace/services/security"
 	"github.com/ikotun-dev/costrace/services/sse"
 	"github.com/ikotun-dev/costrace/shared"
 	"github.com/oschwald/geoip2-golang/v2"
@@ -59,6 +62,23 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ip := getRealIP(r)
+
+	// IP allowlist check
+	if allowed, reason := ipallowlist.CheckIPAllowed(h.db, traceData.APIKey, ip); !allowed {
+		shared.RespondJSON(w, http.StatusForbidden, map[string]string{
+			"error": reason,
+		})
+		return
+	}
+
+	// Rate limit check
+	if allowed, reason := ratelimit.CheckRateLimit(h.db, traceData.APIKey); !allowed {
+		shared.RespondJSON(w, http.StatusTooManyRequests, map[string]string{
+			"error": reason,
+		})
+		return
+	}
+
 	country, _ := getCountry(ip)
 
 	trace := models.Trace{
@@ -82,6 +102,8 @@ func (h *TraceHandler) CreateTrace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go budgetalerts.CheckBudgetAlerts(h.db, &trace)
+	go security.ScanTrace(h.db, &trace)
+	go ratelimit.DetectAnomalies(h.db, &trace)
 
 	if h.hub != nil {
 		h.hub.Broadcast(trace.APIKey, trace)

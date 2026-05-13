@@ -123,6 +123,57 @@ func SendMagicLink(to, token string) error {
 	return nil
 }
 
+func SendSecurityAlert(to, alertTitle, details string) error {
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		log.Println("RESEND_API_KEY not set, skipping email")
+		return nil
+	}
+
+	html := fmt.Sprintf(`
+<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+  <h2 style="color: #ef4444;">Costrace Security Alert</h2>
+  <p><strong>%s</strong></p>
+  <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 16px 0;">
+    <p style="margin: 0; color: #991b1b;">%s</p>
+  </div>
+  <p>Review your security dashboard for full details and take appropriate action.</p>
+  <p style="color: #888; font-size: 13px;">This is an automated security notification from Costrace.</p>
+</div>`, alertTitle, details)
+
+	payload := resendPayload{
+		From:    "Costrace Security <security@costrace.dev>",
+		To:      []string{to},
+		Subject: fmt.Sprintf("Security Alert: %s", alertTitle),
+		HTML:    html,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal email payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("create email request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("send email: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resend API returned status %d", resp.StatusCode)
+	}
+
+	log.Printf("Security alert email sent to %s: %s", to, alertTitle)
+	return nil
+}
+
 func SendTeamInvitation(to, teamName, inviterName, token string) error {
 	apiKey := os.Getenv("RESEND_API_KEY")
 	if apiKey == "" {

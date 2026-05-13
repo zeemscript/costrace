@@ -12,9 +12,13 @@ import (
 	"github.com/ikotun-dev/costrace/config"
 	"github.com/ikotun-dev/costrace/services/analytics"
 	apikeys "github.com/ikotun-dev/costrace/services/api_keys"
+	"github.com/ikotun-dev/costrace/services/audit"
 	"github.com/ikotun-dev/costrace/services/auth"
 	"github.com/ikotun-dev/costrace/services/billing"
 	budgetalerts "github.com/ikotun-dev/costrace/services/budget_alerts"
+	"github.com/ikotun-dev/costrace/services/ipallowlist"
+	"github.com/ikotun-dev/costrace/services/ratelimit"
+	"github.com/ikotun-dev/costrace/services/security"
 	"github.com/ikotun-dev/costrace/services/sse"
 	"github.com/ikotun-dev/costrace/services/teams"
 	"github.com/ikotun-dev/costrace/services/traces"
@@ -81,6 +85,10 @@ func main() {
 	teamHandler := teams.NewTeamHandler(db)
 	sseHandler := sse.NewSSEHandler(db, sseHub)
 	billingHandler := billing.NewBillingHandler(db)
+	securityHandler := security.NewSecurityHandler(db)
+	rateLimitHandler := ratelimit.NewRateLimitHandler(db)
+	auditHandler := audit.NewAuditHandler(db)
+	ipAllowlistHandler := ipallowlist.NewIPAllowlistHandler(db)
 	authHandler := auth.NewAuthHandler(db, types.AuthConfig{
 		GitHubClientID:     githubClientID,
 		GitHubClientSecret: githubClientSecret,
@@ -127,6 +135,26 @@ func main() {
 			r.Post("/teams/invitations/{token}/decline", teamHandler.DeclineInvitation)
 			r.Delete("/teams/members/{id}", teamHandler.RemoveMember)
 			r.Post("/teams/leave", teamHandler.LeaveTeam)
+
+			// Security: prompt injection & data leak alerts
+			r.Get("/security/alerts", securityHandler.ListAlerts)
+			r.Get("/security/summary", securityHandler.SecuritySummary)
+			r.Put("/security/alerts/{id}", securityHandler.ResolveAlert)
+
+			// Rate limiting & abuse detection
+			r.Get("/rate-limits", rateLimitHandler.ListRateLimits)
+			r.Post("/rate-limits", rateLimitHandler.CreateRateLimit)
+			r.Put("/rate-limits/{id}", rateLimitHandler.UpdateRateLimit)
+			r.Delete("/rate-limits/{id}", rateLimitHandler.DeleteRateLimit)
+			r.Get("/abuse-events", rateLimitHandler.ListAbuseEvents)
+
+			// Audit logs
+			r.Get("/audit-logs", auditHandler.ListAuditLogs)
+
+			// IP allowlisting
+			r.Get("/ip-allowlist", ipAllowlistHandler.ListIPRules)
+			r.Post("/ip-allowlist", ipAllowlistHandler.CreateIPRule)
+			r.Delete("/ip-allowlist/{id}", ipAllowlistHandler.DeleteIPRule)
 		})
 	})
 
